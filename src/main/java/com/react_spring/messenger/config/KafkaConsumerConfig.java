@@ -1,6 +1,5 @@
 package com.react_spring.messenger.config;
 
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.react_spring.messenger.kafka.model.ChatMessage;
 import com.react_spring.messenger.kafka.model.ChatRead;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -11,8 +10,8 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
-import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
+import org.springframework.kafka.support.serializer.JsonDeserializer; //TODO to be deprecated, find fix for JacksonJson tools. lib
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +30,8 @@ public class KafkaConsumerConfig {
 
     @Bean
     public ConsumerFactory<String, ChatMessage> chatMessageConsumerFactory() {
-        JacksonJsonDeserializer<ChatMessage> deserializer = new JacksonJsonDeserializer<>(ChatMessage.class);
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonDeserializer<ChatMessage> deserializer = new JsonDeserializer<>(ChatMessage.class, objectMapper, false);
         deserializer.addTrustedPackages("*"); //TODO mb more specific
         return new DefaultKafkaConsumerFactory<>(
                 consumerConfigs("chat-message-group"), new StringDeserializer(), deserializer
@@ -48,7 +48,8 @@ public class KafkaConsumerConfig {
 
     @Bean
     public ConsumerFactory<String, ChatRead> chatReadConsumerFactory() {
-        JacksonJsonDeserializer<ChatRead> deserializer = new JacksonJsonDeserializer<>(ChatRead.class);
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonDeserializer<ChatRead> deserializer = new JsonDeserializer<>(ChatRead.class, objectMapper, false);
         deserializer.addTrustedPackages("*");
         return new DefaultKafkaConsumerFactory<>(
                 consumerConfigs("chat-read-group"), new StringDeserializer(), deserializer
