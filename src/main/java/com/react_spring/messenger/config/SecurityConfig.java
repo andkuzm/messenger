@@ -25,8 +25,8 @@ public class SecurityConfig { //TODO
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable) //TODO enable in future mb ?
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/users/auth/**").permitAll()
+                .authorizeHttpRequests((authorize) -> authorize
+                        .requestMatchers("/user/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->

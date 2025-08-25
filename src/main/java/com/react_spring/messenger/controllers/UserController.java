@@ -4,6 +4,7 @@ import com.react_spring.messenger.models.LoginRequest;
 import com.react_spring.messenger.models.User;
 import com.react_spring.messenger.services.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,7 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController("/users")
+@RequestMapping("/user")
+@RestController
 @RequiredArgsConstructor
 public class UserController {
 
@@ -26,23 +28,23 @@ public class UserController {
 
     @PostMapping("/auth/login")
     public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
-        return ResponseEntity.ok(userService.login(loginRequest));
+        return new  ResponseEntity<>(userService.login(loginRequest), HttpStatus.OK);
     }
 
     // Protected endpoint: user can see their own profile
     @GetMapping("/me")
-    public ResponseEntity<User> getMe(Authentication authentication) {
+    public ResponseEntity<String[]> getMe(Authentication authentication) {
         Long userId = (Long) authentication.getDetails();
         User user = userService.getUserById(userId);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(new String[]{user.getId().toString(), user.getUsername()});
     }
 
-    // Admin-only endpoint
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/all")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
-    }
+//    // Admin-only endpoint
+//    @PreAuthorize("hasRole('ADMIN')")
+//    @GetMapping("/all")
+//    public ResponseEntity<List<User>> getAllUsers() {
+//        return ResponseEntity.ok(userService.getAllUsers());
+//    }
 
     // Example: user can update only their own info
     @PutMapping("/me")

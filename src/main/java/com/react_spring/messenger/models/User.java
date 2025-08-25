@@ -22,7 +22,7 @@ public class User {
     @UpdateTimestamp
     private Timestamp timestamp;
 
-    private String login;
-    private String hashedPassword;
+    private String username;
+    private String password;
 
 }

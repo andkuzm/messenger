@@ -16,13 +16,13 @@ databaseChangeLog:
                   name: timestamp
                   type: TIMESTAMP
               - column:
-                  name: login
+                  name: username
                   type: VARCHAR(255)
                   constraints:
                     nullable: false
                     unique: true
               - column:
-                  name: hashed_password
+                  name: password
                   type: VARCHAR(255)
                   constraints:
                     nullable: false

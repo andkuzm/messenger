@@ -35,12 +35,12 @@ public class UserService {
     }
 
     public @Nullable String login(LoginRequest loginRequest) {
-        User user = userRepository.findUsersByLogin(loginRequest.getUsername());
+        User user = userRepository.findUsersByUsername(loginRequest.getUsername());
         if(user == null){
             throw new UsernameNotFoundException("User not found");
         }
 
-        if(passwordEncoder.matches(loginRequest.getPassword(), user.getHashedPassword())) {
+        if(passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             return jwtService.generateToken(user);
         } else {
             throw new RuntimeException("Invalid credentials");
@@ -48,8 +48,8 @@ public class UserService {
     }
 
     public @Nullable User register(User user) {
-        String hashed = passwordEncoder.encode(user.getHashedPassword());
-        user.setHashedPassword(hashed);
+        String hashed = passwordEncoder.encode(user.getPassword());
+        user.setPassword(hashed);
         return userRepository.save(user);
     }
 }
