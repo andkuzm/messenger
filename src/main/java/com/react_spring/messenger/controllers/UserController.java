@@ -20,18 +20,34 @@ public class UserController {
 
     private final UserService userService;
 
-    // Public endpoint: registration or login
+    /**
+     * Register a user.
+     *
+     * @param user user to be registered
+     * @return 200 OK if successful
+     */
     @PostMapping("/auth/register")
     public ResponseEntity<User> register(@RequestBody User user) {
         return ResponseEntity.ok(userService.register(user));
     }
 
+    /**
+     * Login with user credentials.
+     *
+     * @param loginRequest data containing credentials provided by user
+     * @return 200 OK and JWT token if successful
+     */
     @PostMapping("/auth/login")
     public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
         return new  ResponseEntity<>(userService.login(loginRequest), HttpStatus.OK);
     }
 
-    // Protected endpoint: user can see their own profile
+    /**
+     * Get information about logged-in user.
+     *
+     * @param authentication information for validation of logged-in user
+     * @return 200 OK and information about user if successful
+     */
     @GetMapping("/me")
     public ResponseEntity<String[]> getMe(Authentication authentication) {
         Long userId = (Long) authentication.getDetails();
@@ -46,7 +62,13 @@ public class UserController {
 //        return ResponseEntity.ok(userService.getAllUsers());
 //    }
 
-    // Example: user can update only their own info
+    /**
+     * update the logged-in user
+     *
+     * @param updatedUser user to be updated
+     * @param authentication information for validation of logged-in user
+     * @return 200 OK and updated information about user if successful
+     */
     @PutMapping("/me")
     public ResponseEntity<User> updateMe(@RequestBody User updatedUser,
                                          Authentication authentication) {

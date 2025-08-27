@@ -30,6 +30,14 @@ class MessageController {
         this.userService = userService;
     }
 
+    /**
+     * Content update for an existing message.
+     *
+     * @param messageId id of the message to be changed
+     * @param content new content for the message
+     * @return 200 if message changed successfully
+     *         400 if change attempt was unsuccessful
+     */
     @PutMapping("/change/{messageId}")
     ResponseEntity<Object> ChangeMessage(@PathVariable Long messageId, @RequestBody String content) {
         Message resp = messageService.ChangeMessageById(messageId, content);
@@ -39,6 +47,13 @@ class MessageController {
         return new ResponseEntity<>("Message editing attempt unsuccessful", HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * Get a single message.
+     * @param messageId message to get
+     * @param authentication authentithication for validation of request
+     * @return 200 OK and message if successful
+     *         404 and exception text if unsuccessful
+     */
     @GetMapping("/{messageId}")
     ResponseEntity<Object> GetMessage(@PathVariable Long messageId, Authentication authentication) {
         try {
@@ -56,6 +71,14 @@ class MessageController {
         }
     }
 
+    /**
+     * Handles sending of the message.
+     * @param message Message object to send
+     * @param authentication authentithication for validation of request
+     * @return 200 OK and message if successful
+     *         404 and exception text if unsuccessful
+     *         404 and exception text if unsuccessful with runtime exception triggered
+     */
     @PostMapping("/send")
     ResponseEntity<Object> sendMessage(@RequestBody Message message, Authentication authentication) {
         try {
