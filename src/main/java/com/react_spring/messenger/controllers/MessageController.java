@@ -30,7 +30,7 @@ class MessageController {
         this.userService = userService;
     }
 
-    @GetMapping("/change/{messageId}")
+    @PutMapping("/change/{messageId}")
     ResponseEntity<Object> ChangeMessage(@PathVariable Long messageId, @RequestBody String content) {
         Message resp = messageService.ChangeMessageById(messageId, content);
         if (resp != null) {

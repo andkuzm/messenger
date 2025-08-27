@@ -18,7 +18,7 @@ import java.util.List;
 @Service
 public class JwtService { //TODO
     private final String secret = "qwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwerty";
-    private final Key key = Keys.hmacShaKeyFor(secret.getBytes());
+    final Key key = Keys.hmacShaKeyFor(secret.getBytes());
 
     public boolean validateToken(String token) {
         try {

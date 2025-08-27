@@ -6,11 +6,11 @@ services:
       - 'POSTGRES_PASSWORD=secret'
       - 'POSTGRES_USER=myuser'
     ports:
-      - '5432'
+      - '25432:5432'
   redis:
     image: 'redis:latest'
     ports:
-      - '6379'
+      - '26379:6379'
 
   kafka1:
     image: confluentinc/cp-kafka:latest

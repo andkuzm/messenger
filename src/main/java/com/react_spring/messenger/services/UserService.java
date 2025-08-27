@@ -3,7 +3,7 @@ package com.react_spring.messenger.services;
 import com.react_spring.messenger.models.LoginRequest;
 import com.react_spring.messenger.models.User;
 import com.react_spring.messenger.repositories.UserRepository;
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;

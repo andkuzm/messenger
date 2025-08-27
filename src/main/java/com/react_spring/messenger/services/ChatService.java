@@ -2,6 +2,7 @@ package com.react_spring.messenger.services;
 
 import com.react_spring.messenger.models.Chat;
 import com.react_spring.messenger.repositories.ChatRepository;
+import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,5 +23,9 @@ public class ChatService {
 
     public Optional<Chat> getChat(Long chatId) {
         return chatRepository.findById(chatId);
+    }
+
+    public Optional<Chat> createChat(Chat chat) {
+        return Optional.of(chatRepository.save(chat));
     }
 }

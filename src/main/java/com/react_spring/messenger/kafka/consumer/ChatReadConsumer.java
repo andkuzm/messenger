@@ -14,7 +14,11 @@ public class ChatReadConsumer {
         this.redisTemplate = redisTemplate;
     }
 
-    @KafkaListener(topics = "chat-read", groupId = "chat-group")
+    @KafkaListener(
+            topics = "chat-read",
+            groupId = "chat-group",
+            containerFactory = "chatReadKafkaListenerFactory"
+    )
     public void consume(ChatRead message) {
         System.out.println("read message: " + message);
 

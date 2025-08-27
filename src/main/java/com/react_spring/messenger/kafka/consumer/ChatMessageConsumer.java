@@ -14,7 +14,11 @@ public class ChatMessageConsumer {
         this.redisTemplate = redisTemplate;
     }
 
-    @KafkaListener(topics = "chat-messages", groupId = "chat-group")
+    @KafkaListener(
+            topics = "chat-messages",
+            groupId = "chat-group",
+            containerFactory = "chatMessageKafkaListenerFactory"
+    )
     public void consume(ChatMessage message) {
         System.out.println("Received message: " + message);
         String key = "unread:" + message.getChatId() + ":" + message.getReceiverId(); //key: "unread:{message.getChatId()}:{message.getReaderId()}"
