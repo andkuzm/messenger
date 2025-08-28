@@ -1,7 +1,7 @@
 package com.react_spring.messenger.kafka.producer;
 
 import com.react_spring.messenger.kafka.model.ChatMessage;
-import com.react_spring.messenger.models.Message;
+import com.react_spring.messenger.model.Message;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;

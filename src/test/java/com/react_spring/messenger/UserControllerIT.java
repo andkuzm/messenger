@@ -1,8 +1,8 @@
 package com.react_spring.messenger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.react_spring.messenger.models.LoginRequest;
-import com.react_spring.messenger.models.User;
+import com.react_spring.messenger.model.LoginRequest;
+import com.react_spring.messenger.system.user.model.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

@@ -1,0 +1,10 @@
+package com.react_spring.messenger.repository;
+
+import com.react_spring.messenger.model.Message;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface MessageRepository extends JpaRepository<Message, Long> {
+    Message getMessageById(Long id);
+
+    Message getFirstByMessage(String message);
+}

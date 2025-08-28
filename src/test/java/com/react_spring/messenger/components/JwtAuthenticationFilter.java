@@ -1,6 +1,7 @@
 package com.react_spring.messenger.components;
 
-import com.react_spring.messenger.services.JwtService;
+import com.react_spring.messenger.system.jwt.service.JwtService;
+import com.react_spring.messenger.system.filter.JwtAuthenticationFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,14 +1,13 @@
 package com.react_spring.messenger.kafka.producer;
 
 import com.react_spring.messenger.kafka.model.ChatMessage;
-import com.react_spring.messenger.models.Chat;
-import com.react_spring.messenger.models.Message;
-import com.react_spring.messenger.models.User;
+import com.react_spring.messenger.model.Chat;
+import com.react_spring.messenger.model.Message;
+import com.react_spring.messenger.system.user.model.User;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.kafka.core.KafkaTemplate;
 
