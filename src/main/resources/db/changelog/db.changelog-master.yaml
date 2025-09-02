@@ -28,6 +28,32 @@ databaseChangeLog:
                     nullable: false
 
   - changeSet:
+      id: 1-test-users
+      author: messenger
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column: { name: id, valueNumeric: 1 }
+              - column: { name: timestamp, valueDate: "2025-01-01T10:00:00" }
+              - column: { name: username, value: "alice" }
+              - column: { name: password, value: "pass123" }
+        - insert:
+            tableName: users
+            columns:
+              - column: { name: id, valueNumeric: 2 }
+              - column: { name: timestamp, valueDate: "2025-01-02T11:00:00" }
+              - column: { name: username, value: "bob" }
+              - column: { name: password, value: "pass456" }
+        - insert:
+            tableName: users
+            columns:
+              - column: { name: id, valueNumeric: 3 }
+              - column: { name: timestamp, valueDate: "2025-01-03T12:00:00" }
+              - column: { name: username, value: "carol" }
+              - column: { name: password, value: "pass789" }
+
+  - changeSet:
       id: 2-create-chats
       author: messenger
       changes:
@@ -43,6 +69,21 @@ databaseChangeLog:
               - column:
                   name: title
                   type: VARCHAR(255)
+
+  - changeSet:
+      id: 2-test-chats
+      author: messenger
+      changes:
+        - insert:
+            tableName: chats
+            columns:
+              - column: { name: id, valueNumeric: 1 }
+              - column: { name: title, value: "General Chat" }
+        - insert:
+            tableName: chats
+            columns:
+              - column: { name: id, valueNumeric: 2 }
+              - column: { name: title, value: "Project Alpha" }
 
   - changeSet:
       id: 3-create-chat-users
@@ -77,6 +118,31 @@ databaseChangeLog:
             referencedTableName: users
             referencedColumnNames: id
             constraintName: fk_chat_users_user
+
+  - changeSet:
+      id: 3-test-chat-users
+      author: messenger
+      changes:
+        - insert:
+            tableName: chat_users
+            columns:
+              - column: { name: chat_id, valueNumeric: 1 }
+              - column: { name: user_id, valueNumeric: 1 }
+        - insert:
+            tableName: chat_users
+            columns:
+              - column: { name: chat_id, valueNumeric: 1 }
+              - column: { name: user_id, valueNumeric: 2 }
+        - insert:
+            tableName: chat_users
+            columns:
+              - column: { name: chat_id, valueNumeric: 2 }
+              - column: { name: user_id, valueNumeric: 2 }
+        - insert:
+            tableName: chat_users
+            columns:
+              - column: { name: chat_id, valueNumeric: 2 }
+              - column: { name: user_id, valueNumeric: 3 }
 
   - changeSet:
       id: 4-create-messages
@@ -130,3 +196,44 @@ databaseChangeLog:
             referencedTableName: chats
             referencedColumnNames: id
             constraintName: fk_messages_chat
+
+  - changeSet:
+      id: 4-test-messages
+      author: messenger
+      changes:
+        - insert:
+            tableName: messages
+            columns:
+              - column: { name: id, valueNumeric: 1 }
+              - column: { name: sender_id, valueNumeric: 1 }
+              - column: { name: receiver_id, valueNumeric: 2 }
+              - column: { name: chat_id, valueNumeric: 1 }
+              - column: { name: timestamp, valueDate: "2025-01-10T10:15:00" }
+              - column: { name: message, value: "Hi Bob!" }
+        - insert:
+            tableName: messages
+            columns:
+              - column: { name: id, valueNumeric: 2 }
+              - column: { name: sender_id, valueNumeric: 2 }
+              - column: { name: receiver_id, valueNumeric: 1 }
+              - column: { name: chat_id, valueNumeric: 1 }
+              - column: { name: timestamp, valueDate: "2025-01-10T10:16:00" }
+              - column: { name: message, value: "Hey Alice!" }
+        - insert:
+            tableName: messages
+            columns:
+              - column: { name: id, valueNumeric: 3 }
+              - column: { name: sender_id, valueNumeric: 2 }
+              - column: { name: receiver_id, valueNumeric: 3 }
+              - column: { name: chat_id, valueNumeric: 2 }
+              - column: { name: timestamp, valueDate: "2025-01-11T09:00:00" }
+              - column: { name: message, value: "Morning Carol, project update?" }
+        - insert:
+            tableName: messages
+            columns:
+              - column: { name: id, valueNumeric: 4 }
+              - column: { name: sender_id, valueNumeric: 3 }
+              - column: { name: receiver_id, valueNumeric: 2 }
+              - column: { name: chat_id, valueNumeric: 2 }
+              - column: { name: timestamp, valueDate: "2025-01-11T09:05:00" }
+              - column: { name: message, value: "Yes, I’ll share the report." }
