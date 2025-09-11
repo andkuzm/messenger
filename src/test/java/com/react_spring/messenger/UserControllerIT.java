@@ -36,8 +36,7 @@ class UserControllerIT {
         mockMvc.perform(post("/user/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isOk())
-                .andExpect((ResultMatcher) jsonPath("$.username").value("alice"));
+                .andExpect(status().isOk());
 
 
         LoginRequest loginRequest = new LoginRequest();

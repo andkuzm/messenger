@@ -75,9 +75,10 @@ class UserServiceTest {
         user.setPassword("plainPassword");
 
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.findUsersByUsername("charlie")).thenAnswer(inv -> user);
 
-        User saved = userService.register(user);
-
+        String username = userService.register(user);
+        User saved =  userRepository.findUsersByUsername(username);
         assertNotNull(saved);
         assertNotEquals("plainPassword", saved.getPassword());
         assertTrue(passwordEncoder.matches("plainPassword", saved.getPassword()));

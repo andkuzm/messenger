@@ -43,7 +43,7 @@ class ChatController {
      *         404 and exception text if unsuccessful
      */
     @GetMapping("/{chatId}")
-    ResponseEntity<Object> getChat(@PathVariable Long chatId) { //validate correct user
+    ResponseEntity<Object> getChat(@PathVariable Long chatId) { //TODO validate correct user
         Chat chat = chatService.getChat(chatId).orElse(null);
         if (chat==null){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

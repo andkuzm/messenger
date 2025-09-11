@@ -48,9 +48,10 @@ public class UserService {
         }
     }
 
-    public @Nullable User register(User user) {
+    public @Nullable String register(User user) {
         String hashed = passwordEncoder.encode(user.getPassword());
         user.setPassword(hashed);
-        return userRepository.save(user);
+        userRepository.save(user);
+        return user.getUsername();
     }
 }

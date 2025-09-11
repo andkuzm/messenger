@@ -23,7 +23,7 @@ public class UserController {
      * @return 200 OK if successful
      */
     @PostMapping("/auth/register")
-    public ResponseEntity<User> register(@RequestBody User user) {
+    public ResponseEntity<String> register(@RequestBody User user) {
         return ResponseEntity.ok(userService.register(user));
     }
 

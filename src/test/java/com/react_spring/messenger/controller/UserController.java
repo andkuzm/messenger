@@ -35,12 +35,12 @@ class UserControllerTest {
         savedUser.setId(1L);
         savedUser.setUsername("test");
 
-        when(userService.register(newUser)).thenReturn(savedUser);
+        when(userService.register(newUser)).thenReturn("test");
 
-        ResponseEntity<User> response = userController.register(newUser);
+        ResponseEntity<String> response = userController.register(newUser);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(savedUser, response.getBody());
+        assertEquals("test", response.getBody());
     }
 
     @Test
