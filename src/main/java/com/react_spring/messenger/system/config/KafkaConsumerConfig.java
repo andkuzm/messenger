@@ -22,7 +22,8 @@ public class KafkaConsumerConfig {
 
     private Map<String, Object> consumerConfigs(String groupId) {
         Map<String, Object> config = new HashMap<>();
-        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:29092,localhost:29094,localhost:29096");
+//        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:29092,localhost:29094,localhost:29096");
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka1-service:9092,kafka2-service:9094,kafka3-service:9096");
         config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         return config;

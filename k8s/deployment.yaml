@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messenger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: messenger
+  template:
+    metadata:
+      labels:
+        app: messenger
+    spec:
+      containers:
+        - name: messenger
+          image: messenger:latest
+          imagePullPolicy: Never
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-service:5432/mydatabase
+            - name: SPRING_DATASOURCE_USERNAME
+              value: myuser
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: secret
+            - name: SPRING_DATA_REDIS_HOST
+              value: redis-service
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: kafka1-service:9092,kafka2-service:9094,kafka3-service:9096
+          ports:
+            - containerPort: 8080
