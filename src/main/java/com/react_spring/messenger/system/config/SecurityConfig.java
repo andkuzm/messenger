@@ -25,7 +25,7 @@ public class SecurityConfig { //TODO
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(AbstractHttpConfigurer::disable) //TODO enable in future mb ?
+                .cors(cors -> cors.configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues()))
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/user/auth/**").permitAll()
                         .anyRequest().authenticated()

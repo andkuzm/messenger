@@ -14,8 +14,7 @@ spec:
     spec:
       containers:
         - name: messenger
-          image: messenger:latest
-          imagePullPolicy: Never
+          image: gcr.io/high-wave-472110-c9/messenger:latest
           env:
             - name: SPRING_DATASOURCE_URL
               value: jdbc:postgresql://postgres-service:5432/mydatabase
