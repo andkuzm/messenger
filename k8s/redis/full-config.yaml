@@ -17,6 +17,7 @@ spec:
           image: redis:latest
           ports:
             - containerPort: 6379
+          args: ["--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
 ---
 apiVersion: v1
 kind: Service
