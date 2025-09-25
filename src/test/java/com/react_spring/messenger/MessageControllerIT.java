@@ -56,17 +56,18 @@ class MessageControllerIT {
     private String token2;
 
     @BeforeEach
-    @Transactional
     void setUp() throws Exception {
         sender = new User();
-        sender.setUsername("bob");
+        sender.setUsername("bob1");
         sender.setPassword("bobPass");
-        sender = userRepository.save(sender);
 
         reader = new User();
-        reader.setUsername("alice");
+        reader.setUsername("alice1");
         reader.setPassword("alicePass");
-        reader = userRepository.save(reader);
+        sender.setId(-1L);
+        reader.setId(-2L);
+//        userRepository.save(sender);
+//        userRepository.save(reader);
 
         chat = new Chat();
         chat.setTitle("TestChat");
@@ -84,7 +85,7 @@ class MessageControllerIT {
 
         LoginRequest loginRequest = new LoginRequest();
 
-        loginRequest.setUsername("bob");
+        loginRequest.setUsername("bob1");
         loginRequest.setPassword("bobPass");
         token1 = mockMvc.perform(post("/user/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -94,7 +95,7 @@ class MessageControllerIT {
                 .getResponse()
                 .getContentAsString();
 
-        loginRequest.setUsername("alice");
+        loginRequest.setUsername("alice1");
         loginRequest.setPassword("alicePass");
         token2 = mockMvc.perform(post("/user/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -103,21 +104,22 @@ class MessageControllerIT {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-
     }
 
     @Test
     void testSendMessage() throws Exception {
+        User persistentSender = userRepository.findUsersByUsername(sender.getUsername());
+        User persistentReader = userRepository.findUsersByUsername(reader.getUsername());
         var message = new Message();
         message.setMessage("hello world");
         message.setChat(chat);
-        message.setSender(sender);
-        message.setReceiver(reader);
+        message.setSender(persistentSender);
+        message.setReceiver(persistentReader);
 
         mockMvc.perform(post("/message/send")
                         .header("Authorization", "Bearer " + token1)
-                        .principal(() -> String.valueOf(sender.getId())) // provides Authentication.getName()
-                        .requestAttr("authenticationDetails", sender.getId()) // trick: used below
+                        .principal(() -> String.valueOf(persistentSender.getId()))
+                        .requestAttr("authenticationDetails", persistentSender.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(message)))
                 .andExpect(status().isOk());
@@ -125,16 +127,18 @@ class MessageControllerIT {
 
     @Test
     void testGetMessageAndChange() throws Exception {
+        User persistentSender = userRepository.findUsersByUsername(sender.getUsername());
+        User persistentReader = userRepository.findUsersByUsername(reader.getUsername());
         var message = new Message();
         message.setMessage("ping");
         message.setChat(chat);
-        message.setReceiver(reader);
-        message.setSender(sender);
+        message.setReceiver(persistentReader);
+        message.setSender(persistentSender);
 
         mockMvc.perform(post("/message/send")
                         .header("Authorization", "Bearer " + token1)
-                        .principal(() -> String.valueOf(sender.getId()))
-                        .requestAttr("authenticationDetails", sender.getId())
+                        .principal(() -> String.valueOf(persistentSender.getId()))
+                        .requestAttr("authenticationDetails", persistentSender.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(message)))
                 .andExpect(status().isOk());
@@ -143,8 +147,8 @@ class MessageControllerIT {
 
         mockMvc.perform(get("/message/{id}", messageId)
                         .header("Authorization", "Bearer " + token2)
-                        .principal(() -> String.valueOf(reader.getId()))
-                        .requestAttr("authenticationDetails", reader.getId()))
+                        .principal(() -> String.valueOf(persistentReader.getId()))
+                        .requestAttr("authenticationDetails", persistentReader.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("ping"));
 
@@ -156,8 +160,8 @@ class MessageControllerIT {
 
         mockMvc.perform(get("/message/{id}", messageId)
                         .header("Authorization", "Bearer " + token2)
-                        .principal(() -> String.valueOf(reader.getId()))
-                        .requestAttr("authenticationDetails", reader.getId()))
+                        .principal(() -> String.valueOf(persistentReader.getId()))
+                        .requestAttr("authenticationDetails", persistentReader.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("\"pong\""));
     }

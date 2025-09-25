@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -45,20 +46,17 @@ class ChatControllerIT {
     private String token1;
 
     @BeforeEach
-    @Transactional
     void setUp() throws Exception {
         chatRepository.deleteAll();
         userRepository.deleteAll();
 
         sender = new User();
-        sender.setUsername("bob");
+        sender.setUsername("bob1");
         sender.setPassword("bobPass");
-        sender = userRepository.save(sender);
 
         reader = new User();
-        reader.setUsername("alice");
+        reader.setUsername("alice1");
         reader.setPassword("alicePass");
-        reader = userRepository.save(reader);
 
         chat = new Chat();
         chat.setTitle("TestChat");
@@ -75,7 +73,7 @@ class ChatControllerIT {
                 .andExpect(status().isOk());
 
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setUsername("bob");
+        loginRequest.setUsername("bob1");
         loginRequest.setPassword("bobPass");
         token1 = mockMvc.perform(post("/user/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -107,11 +105,14 @@ class ChatControllerIT {
     }
 
     @Test
+    @Transactional
     void testFindChatsByUserId() throws Exception {
-        chat.setUsers(Arrays.asList(sender, reader));
+        User persistedSender = userRepository.findUsersByUsername("bob1");
+        User persistedReader = userRepository.findUsersByUsername("alice1");
+        chat.setUsers(new ArrayList<>(Arrays.asList(persistedSender, persistedReader)));
         chatRepository.save(chat);
 
-        mockMvc.perform(get("/chat/by-user/" + sender.getId())
+        mockMvc.perform(get("/chat/by-user/" + persistedSender.getId())
                         .header("Authorization", "Bearer " + token1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(chat.getId()))
@@ -119,14 +120,17 @@ class ChatControllerIT {
     }
 
     @Test
+    @Transactional
     void testGetChatById_found() throws Exception {
-        chat.setUsers(Arrays.asList(sender, reader));
+        User persistedSender = userRepository.findUsersByUsername("bob1");
+        User persistedReader = userRepository.findUsersByUsername("alice1");
+        chat.setUsers(new ArrayList<>(Arrays.asList(persistedSender, persistedReader)));
         chatRepository.save(chat);
 
         mockMvc.perform(get("/chat/" + chat.getId())
                         .header("Authorization", "Bearer " + token1)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(sender.getId())))
+                        .content(objectMapper.writeValueAsString(persistedSender.getId())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(chat.getId()))
                 .andExpect(jsonPath("$.title").value("TestChat"));

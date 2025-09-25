@@ -60,7 +60,7 @@ class MessageController {
             ChatRead cr = new ChatRead();
             cr.setChatId(resp.getChat().getId());
             cr.setSenderId(resp.getSender().getId());
-            cr.setReaderId((Long) authentication.getDetails()); //TODO get curretn authorized user
+            cr.setReaderId((Long) authentication.getDetails());
             chatReadProducer.sendMessage(cr);
 
             return new ResponseEntity<>(resp, HttpStatus.OK);

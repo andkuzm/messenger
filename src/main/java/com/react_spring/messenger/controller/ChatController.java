@@ -1,10 +1,13 @@
 package com.react_spring.messenger.controller;
 
 import com.react_spring.messenger.model.Chat;
+import com.react_spring.messenger.model.Message;
+import com.react_spring.messenger.service.MessageService;
 import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.service.ChatService;
 import com.react_spring.messenger.system.user.service.UserService;
 import jakarta.annotation.Nullable;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,10 +20,12 @@ class ChatController {
 
     private final ChatService chatService;
     private final UserService userService;
+    private final MessageService messageService;
 
-    public ChatController(ChatService chatService, UserService userService) {
+    public ChatController(ChatService chatService, UserService userService, MessageService messageService) {
         this.chatService = chatService;
         this.userService = userService;
+        this.messageService = messageService;
     }
 
     /**
@@ -49,6 +54,24 @@ class ChatController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(chat, HttpStatus.OK); //TODO make pagination with gradual approx +-40 messages pull
+    }
+
+    @GetMapping("/{chatId}/messages")
+    public ResponseEntity<List<Message>> getMessages(
+            @PathVariable Long chatId,
+            @RequestParam(required = false) Long beforeMessageId,
+            @RequestParam(required = false) Long afterMessageId,
+            @RequestParam(defaultValue = "40") int size
+    ) {
+        List<Message> messages;
+        if (beforeMessageId != null) {
+            messages = messageService.getMessagesBefore(chatId, beforeMessageId, size);
+        } else if (afterMessageId != null) {
+            messages = messageService.getMessagesAfter(chatId, afterMessageId, size);
+        } else {
+            messages = messageService.getLatestMessages(chatId, size);
+        }
+        return new ResponseEntity<>(messages, HttpStatus.OK);
     }
 
     /**

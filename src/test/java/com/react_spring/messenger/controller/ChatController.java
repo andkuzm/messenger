@@ -1,6 +1,7 @@
 package com.react_spring.messenger.controller;
 
 import com.react_spring.messenger.model.Chat;
+import com.react_spring.messenger.service.MessageService;
 import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.service.ChatService;
 import com.react_spring.messenger.system.user.service.UserService;
@@ -21,12 +22,14 @@ class ChatControllerTest { //TODO
     private ChatService chatService;
     private UserService userService;
     private ChatController chatController;
+    private MessageService messageService;
 
     @BeforeEach
     void setUp() {
         chatService = mock(ChatService.class);
         userService = mock(UserService.class);
-        chatController = new ChatController(chatService, userService);
+        messageService = mock(MessageService.class);
+        chatController = new ChatController(chatService, userService, messageService);
     }
 
     @Test
