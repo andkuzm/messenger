@@ -2,6 +2,7 @@ package com.react_spring.messenger.controller;
 
 
 import com.react_spring.messenger.model.LoginRequest;
+import com.react_spring.messenger.model.RegisterRequest;
 import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.system.user.controller.UserController;
 import com.react_spring.messenger.system.user.service.UserService;
@@ -28,16 +29,13 @@ class UserControllerTest {
     }
 
     @Test
-    void register_ShouldReturnUser() {
-        User newUser = new User();
-        newUser.setUsername("test");
-        User savedUser = new User();
-        savedUser.setId(1L);
-        savedUser.setUsername("test");
+    void register_ShouldReturnUsername() {
+        RegisterRequest registerRequest = new RegisterRequest();
+        registerRequest.setUsername("test");
 
-        when(userService.register(newUser)).thenReturn("test");
+        when(userService.register(registerRequest)).thenReturn("test");
 
-        ResponseEntity<String> response = userController.register(newUser);
+        ResponseEntity<String> response = userController.register(registerRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("test", response.getBody());

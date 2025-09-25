@@ -1,6 +1,7 @@
 package com.react_spring.messenger.system.user.controller;
 
 import com.react_spring.messenger.model.LoginRequest;
+import com.react_spring.messenger.model.RegisterRequest;
 import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.system.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +20,12 @@ public class UserController {
     /**
      * Register a user.
      *
-     * @param user user to be registered
+     * @param registerRequest user credentials to be registered
      * @return 200 OK if successful
      */
     @PostMapping("/auth/register")
-    public ResponseEntity<String> register(@RequestBody User user) {
-        return ResponseEntity.ok(userService.register(user));
+    public ResponseEntity<String> register(@RequestBody RegisterRequest registerRequest) {
+        return ResponseEntity.ok(userService.register(registerRequest));
     }
 
     /**

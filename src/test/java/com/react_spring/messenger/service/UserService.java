@@ -1,12 +1,14 @@
 package com.react_spring.messenger.service;
 
 import com.react_spring.messenger.model.LoginRequest;
+import com.react_spring.messenger.model.RegisterRequest;
 import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.system.jwt.service.JwtService;
 import com.react_spring.messenger.system.user.repository.UserRepository;
 import com.react_spring.messenger.system.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -69,21 +71,23 @@ class UserServiceTest {
 
     @Test
     void testRegisterEncodesPassword() {
-        User user = new User();
-        user.setId(1L);
-        user.setUsername("charlie");
-        user.setPassword("plainPassword");
+        RegisterRequest registerRequest = new RegisterRequest();
+        registerRequest.setUsername("charlie");
+        registerRequest.setPassword("plainPassword");
 
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(userRepository.findUsersByUsername("charlie")).thenAnswer(inv -> user);
+        when(userRepository.findUsersByUsername("charlie")).thenReturn(null); // no existing user
 
-        String username = userService.register(user);
-        User saved =  userRepository.findUsersByUsername(username);
+        String username = userService.register(registerRequest);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        User saved = userCaptor.getValue();
+
         assertNotNull(saved);
-        assertNotEquals("plainPassword", saved.getPassword());
+        assertEquals("charlie", saved.getUsername());
+        assertNotEquals("plainPassword", saved.getPassword()); // password should be encoded
         assertTrue(passwordEncoder.matches("plainPassword", saved.getPassword()));
-
-        verify(userRepository).save(saved);
     }
 
     @Test

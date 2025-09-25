@@ -1,6 +1,7 @@
 package com.react_spring.messenger.system.user.service;
 
 import com.react_spring.messenger.model.LoginRequest;
+import com.react_spring.messenger.model.RegisterRequest;
 import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.system.jwt.service.JwtService;
 import com.react_spring.messenger.system.user.repository.UserRepository;
@@ -48,9 +49,11 @@ public class UserService {
         }
     }
 
-    public @Nullable String register(User user) {
-        String hashed = passwordEncoder.encode(user.getPassword());
+    public @Nullable String register(RegisterRequest registerRequest) {
+        User user = new User();
+        String hashed = passwordEncoder.encode(registerRequest.getPassword());
         user.setPassword(hashed);
+        user.setUsername(registerRequest.getUsername());
         userRepository.save(user);
         return user.getUsername();
     }

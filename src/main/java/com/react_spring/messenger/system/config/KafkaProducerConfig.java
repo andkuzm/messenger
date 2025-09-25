@@ -20,8 +20,8 @@ public class KafkaProducerConfig {
 
     private Map<String, Object> producerConfigs() {
         Map<String, Object> config = new HashMap<>();
-//        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:29092,localhost:29094,localhost:29096");
-        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka1-service:9092,kafka2-service:9094,kafka3-service:9096");
+        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:29092,localhost:29094,localhost:29096");
+//        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka1-service:9092,kafka2-service:9094,kafka3-service:9096");
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return config;

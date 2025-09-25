@@ -1,5 +1,6 @@
 package com.react_spring.messenger.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.react_spring.messenger.system.user.model.User;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
@@ -24,7 +25,8 @@ public class Chat {
     )
     private List<User> users;
 
-    @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Message> messageIDs;
 
     @Nullable
