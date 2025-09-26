@@ -53,11 +53,11 @@ class ChatController {
         if (chat==null){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>(chat, HttpStatus.OK); //TODO make pagination with gradual approx +-40 messages pull
+        return new ResponseEntity<>(chat, HttpStatus.OK);
     }
 
     @GetMapping("/{chatId}/messages")
-    public ResponseEntity<List<Message>> getMessages(
+    public ResponseEntity<List<Message>> getMessages( //TODO write tests, write docs for the method
             @PathVariable Long chatId,
             @RequestParam(required = false) Long beforeMessageId,
             @RequestParam(required = false) Long afterMessageId,

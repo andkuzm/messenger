@@ -1,6 +1,7 @@
 package com.react_spring.messenger.controller;
 
 import com.react_spring.messenger.model.Chat;
+import com.react_spring.messenger.model.Message;
 import com.react_spring.messenger.service.MessageService;
 import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.service.ChatService;
@@ -101,5 +102,73 @@ class ChatControllerTest { //TODO
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNull(response.getBody());
         verify(chatService).createChat(any(Chat.class));
+    }
+
+    @Test
+    void testGetLatestMessages() {
+        Long chatId = 1L;
+        int size = 40;
+        List<Message> expectedMessages = List.of(new Message(), new Message());
+
+        when(messageService.getLatestMessages(chatId, size)).thenReturn(expectedMessages);
+
+        ResponseEntity<List<Message>> response = chatController.getMessages(chatId, null, null, size);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(expectedMessages, response.getBody());
+        verify(messageService).getLatestMessages(chatId, size);
+        verifyNoMoreInteractions(messageService);
+    }
+
+    @Test
+    void testGetMessagesBefore() {
+        Long chatId = 1L;
+        Long beforeMessageId = 10L;
+        int size = 20;
+        List<Message> expectedMessages = List.of(new Message());
+
+        when(messageService.getMessagesBefore(chatId, beforeMessageId, size)).thenReturn(expectedMessages);
+
+        ResponseEntity<List<Message>> response = chatController.getMessages(chatId, beforeMessageId, null, size);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(expectedMessages, response.getBody());
+        verify(messageService).getMessagesBefore(chatId, beforeMessageId, size);
+        verifyNoMoreInteractions(messageService);
+    }
+
+    @Test
+    void testGetMessagesAfter() {
+        Long chatId = 1L;
+        Long afterMessageId = 5L;
+        int size = 15;
+        List<Message> expectedMessages = List.of(new Message(), new Message(), new Message());
+
+        when(messageService.getMessagesAfter(chatId, afterMessageId, size)).thenReturn(expectedMessages);
+
+        ResponseEntity<List<Message>> response = chatController.getMessages(chatId, null, afterMessageId, size);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(expectedMessages, response.getBody());
+        verify(messageService).getMessagesAfter(chatId, afterMessageId, size);
+        verifyNoMoreInteractions(messageService);
+    }
+
+    @Test
+    void testPreferBeforeOverAfter() {
+        Long chatId = 1L;
+        Long beforeMessageId = 99L;
+        Long afterMessageId = 100L; // should be ignored
+        int size = 10;
+        List<Message> expectedMessages = List.of(new Message());
+
+        when(messageService.getMessagesBefore(chatId, beforeMessageId, size)).thenReturn(expectedMessages);
+
+        ResponseEntity<List<Message>> response = chatController.getMessages(chatId, beforeMessageId, afterMessageId, size);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(expectedMessages, response.getBody());
+        verify(messageService).getMessagesBefore(chatId, beforeMessageId, size);
+        verifyNoMoreInteractions(messageService);
     }
 }

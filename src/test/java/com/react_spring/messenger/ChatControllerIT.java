@@ -3,6 +3,8 @@ package com.react_spring.messenger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.react_spring.messenger.model.Chat;
 import com.react_spring.messenger.model.LoginRequest;
+import com.react_spring.messenger.model.Message;
+import com.react_spring.messenger.repository.MessageRepository;
 import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.repository.ChatRepository;
 import com.react_spring.messenger.system.user.repository.UserRepository;
@@ -38,6 +40,9 @@ class ChatControllerIT {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private MessageRepository messageRepository;
 
     private User sender;
     private User reader;
@@ -143,5 +148,95 @@ class ChatControllerIT {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(sender.getId())))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testGetMessages_latest() throws Exception {
+        User persistedSender = userRepository.findUsersByUsername("bob1");
+        User persistedReader = userRepository.findUsersByUsername("alice1");
+        chat.setUsers(new ArrayList<>(Arrays.asList(persistedSender, persistedReader)));
+        chatRepository.save(chat);
+
+        // create some messages
+        Message m1 = new Message();
+        m1.setChat(chat);
+        m1.setSender(persistedSender);
+        m1.setReceiver(persistedReader);
+        m1.setMessage("Hello");
+        messageRepository.save(m1);
+
+        Message m2 = new Message();
+        m2.setChat(chat);
+        m2.setSender(persistedReader);
+        m2.setReceiver(persistedSender);
+        m2.setMessage("Hi back");
+        messageRepository.save(m2);
+
+        mockMvc.perform(get("/chat/" + chat.getId() + "/messages")
+                        .header("Authorization", "Bearer " + token1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].message").value("Hi back"))
+                .andExpect(jsonPath("$[1].message").value("Hello"));
+    }
+
+    @Test
+    void testGetMessages_before() throws Exception {
+        User persistedSender = userRepository.findUsersByUsername("bob1");
+        User persistedReader = userRepository.findUsersByUsername("alice1");
+        chat.setUsers(new ArrayList<>(Arrays.asList(persistedSender, persistedReader)));
+        chatRepository.save(chat);
+
+        Message old = new Message();
+        old.setChat(chat);
+        old.setSender(persistedSender);
+        old.setReceiver(persistedReader);
+        old.setMessage("First");
+        messageRepository.save(old);
+
+        Message newer = new Message();
+        newer.setChat(chat);
+        newer.setSender(persistedReader);
+        newer.setReceiver(persistedSender);
+        newer.setMessage("Second");
+        messageRepository.save(newer);
+
+        // request before "newer" → should only return "First"
+        mockMvc.perform(get("/chat/" + chat.getId() + "/messages")
+                        .param("beforeMessageId", String.valueOf(newer.getId()))
+                        .header("Authorization", "Bearer " + token1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].message").value("First"))
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+
+
+    @Test
+    void testGetMessages_after() throws Exception {
+        User persistedSender = userRepository.findUsersByUsername("bob1");
+        User persistedReader = userRepository.findUsersByUsername("alice1");
+        chat.setUsers(new ArrayList<>(Arrays.asList(persistedSender, persistedReader)));
+        chatRepository.save(chat);
+
+        Message first = new Message();
+        first.setChat(chat);
+        first.setSender(persistedSender);
+        first.setReceiver(persistedReader);
+        first.setMessage("First");
+        messageRepository.save(first);
+
+        Message second = new Message();
+        second.setChat(chat);
+        second.setSender(persistedReader);
+        second.setReceiver(persistedSender);
+        second.setMessage("Second");
+        messageRepository.save(second);
+
+        // request after "first" → should only return "Second"
+        mockMvc.perform(get("/chat/" + chat.getId() + "/messages")
+                        .param("afterMessageId", String.valueOf(first.getId()))
+                        .header("Authorization", "Bearer " + token1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].message").value("Second"))
+                .andExpect(jsonPath("$.length()").value(1));
     }
 }
