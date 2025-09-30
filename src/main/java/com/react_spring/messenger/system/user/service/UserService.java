@@ -28,6 +28,10 @@ public class UserService {
         return userRepository.findUserById(id);
     }
 
+    public User getUserByUsername(String username) {
+        return userRepository.findUsersByUsername(username);
+    }
+
     public User updateUser(User updatedUser) {
         return userRepository.save(updatedUser);
     }

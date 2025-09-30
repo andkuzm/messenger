@@ -56,8 +56,18 @@ class ChatController {
         return new ResponseEntity<>(chat, HttpStatus.OK);
     }
 
+    /**
+     * Get messages from a chat with optional pagination.
+     *
+     * @param chatId id of the chat to retrieve messages from
+     * @param beforeMessageId optional id of the message, fetch messages before it
+     * @param afterMessageId optional id of the message, fetch messages after it
+     * @param size maximum number of messages to return (default 40)
+     * @return 200 OK with list of messages if successful
+     *         404 if chat not found
+     */
     @GetMapping("/{chatId}/messages")
-    public ResponseEntity<List<Message>> getMessages( //TODO write tests, write docs for the method
+    public ResponseEntity<List<Message>> getMessages(
             @PathVariable Long chatId,
             @RequestParam(required = false) Long beforeMessageId,
             @RequestParam(required = false) Long afterMessageId,
@@ -75,18 +85,34 @@ class ChatController {
     }
 
     /**
+     * Join a chat by adding a user to it.
+     *
+     * @param chatId id of the chat to join
+     * @param userId id of the user joining the chat (in request body)
+     * @return 200 OK if the user successfully joins
+     *         400 BAD REQUEST if chat not found or join failed
+     */
+    @PutMapping("/{chatId}/join")
+    public ResponseEntity<Object> joinChat(@PathVariable Long chatId, @RequestBody Long userId) { //TODO tests
+        return chatService.getChat(chatId).map(chat->{
+            chatService.joinChat(chat, userId);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }).orElse(new ResponseEntity<>(HttpStatus.BAD_REQUEST));
+    }
+
+    /**
      * Creation of chat
      *
-     * @param userIds list of all users of the chat at the moment of its creation
+     * @param userNames list of usernames all users of the chat at the moment of its creation
      * @param title title of the chat, can be null
      * @return 200 OK and chat object if successful
      *         400 if unsuccessful
      */
     @PostMapping("/create")
-    ResponseEntity<Object> createChat(@RequestBody List<Long> userIds, @Nullable @RequestBody String title) {
+    ResponseEntity<Object> createChat(@RequestBody List<String> userNames, @Nullable @RequestBody String title) {
         List<User> users = new ArrayList<>();
-        for (Long userId : userIds) {
-            User user = userService.getUserById(userId);
+        for (String userName : userNames) {
+            User user = userService.getUserByUsername(userName);
             users.add(user);
         }
         Chat chat = new Chat();
