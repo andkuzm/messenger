@@ -1,6 +1,7 @@
 package com.react_spring.messenger.controller;
 
 import com.react_spring.messenger.model.Chat;
+import com.react_spring.messenger.model.ChatCreationRequest;
 import com.react_spring.messenger.model.Message;
 import com.react_spring.messenger.service.MessageService;
 import com.react_spring.messenger.system.user.model.User;
@@ -109,19 +110,18 @@ class ChatController {
      *         400 if unsuccessful
      */
     @PostMapping("/create")
-    ResponseEntity<Object> createChat(@RequestBody List<String> userNames, @Nullable @RequestBody String title) {
+    ResponseEntity<Object> createChat(@RequestBody ChatCreationRequest request) { //TODO correct docs
         List<User> users = new ArrayList<>();
-        for (String userName : userNames) {
+        for (String userName : request.getUserNames()) {
             User user = userService.getUserByUsername(userName);
             users.add(user);
         }
         Chat chat = new Chat();
-        chat.setTitle(title);
+        chat.setTitle(request.getTitle());
         chat.setUsers(users);
-        Optional<Chat> chatOrNull = chatService.createChat(chat);
-        return chatOrNull.
-                <ResponseEntity<Object>>map(value ->
-                                new ResponseEntity<>(value, HttpStatus.OK))
+
+        return chatService.createChat(chat)
+                .<ResponseEntity<Object>>map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.BAD_REQUEST));
     }
 
