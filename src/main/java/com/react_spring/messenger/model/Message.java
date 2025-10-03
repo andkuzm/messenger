@@ -1,5 +1,6 @@
 package com.react_spring.messenger.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.react_spring.messenger.system.user.model.User;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -26,6 +27,7 @@ public class Message {
 
     @ManyToOne
     @JoinColumn(name = "chat_id", nullable = false)
+    @JsonIgnore
     private Chat chat;
 
     @UpdateTimestamp

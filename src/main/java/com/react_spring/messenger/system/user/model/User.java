@@ -1,5 +1,6 @@
 package com.react_spring.messenger.system.user.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,9 +21,11 @@ public class User {
     private Long id;
 
     @UpdateTimestamp
+    @JsonIgnore
     private Timestamp timestamp;
 
     private String username;
+    @JsonIgnore
     private String password;
 
 }

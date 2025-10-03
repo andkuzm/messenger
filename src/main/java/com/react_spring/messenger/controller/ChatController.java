@@ -11,6 +11,7 @@ import jakarta.annotation.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -110,12 +111,15 @@ class ChatController {
      *         400 if unsuccessful
      */
     @PostMapping("/create")
-    ResponseEntity<Object> createChat(@RequestBody ChatCreationRequest request) { //TODO correct docs
+    ResponseEntity<Object> createChat(@RequestBody ChatCreationRequest request, Authentication authentication) { //TODO correct docs
+        Long userId = (Long) authentication.getDetails();
         List<User> users = new ArrayList<>();
         for (String userName : request.getUserNames()) {
             User user = userService.getUserByUsername(userName);
             users.add(user);
         }
+        User user = userService.getUserById(userId);
+        users.add(user);
         Chat chat = new Chat();
         chat.setTitle(request.getTitle());
         chat.setUsers(users);
