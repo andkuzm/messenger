@@ -3,14 +3,20 @@ package com.react_spring.messenger.controller;
 import com.react_spring.messenger.kafka.model.ChatRead;
 import com.react_spring.messenger.kafka.producer.ChatMessageProducer;
 import com.react_spring.messenger.kafka.producer.ChatReadProducer;
+import com.react_spring.messenger.model.Chat;
+import com.react_spring.messenger.model.DTO.MessageDto;
 import com.react_spring.messenger.model.Message;
+import com.react_spring.messenger.service.ChatService;
 import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.service.MessageService;
 import com.react_spring.messenger.system.user.service.UserService;
+import org.hibernate.ObjectNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @RequestMapping("/message")
 @RestController
@@ -20,12 +26,14 @@ class MessageController {
     private final ChatMessageProducer chatMessageProducer;
     private final ChatReadProducer chatReadProducer;
     private final UserService userService;
+    private final ChatService chatService;
 
-    MessageController(MessageService messageService, ChatMessageProducer chatMessageProducer, ChatReadProducer chatReadProducer, UserService userService) {
+    MessageController(MessageService messageService, ChatMessageProducer chatMessageProducer, ChatReadProducer chatReadProducer, UserService userService, ChatService chatService) {
         this.messageService = messageService;
         this.chatMessageProducer = chatMessageProducer;
         this.chatReadProducer = chatReadProducer;
         this.userService = userService;
+        this.chatService = chatService;
     }
 
     /**
@@ -71,18 +79,27 @@ class MessageController {
 
     /**
      * Handles sending of the message.
-     * @param message Message object to send
+     * @param messageDto Message dataObject to send
      * @param authentication authentithication for validation of request
      * @return 200 OK and message if successful
      *         404 and exception text if unsuccessful
      *         404 and exception text if unsuccessful with runtime exception triggered
      */
     @PostMapping("/send")
-    ResponseEntity<Object> sendMessage(@RequestBody Message message, Authentication authentication) {
+    ResponseEntity<Object> sendMessage(@RequestBody MessageDto messageDto, Authentication authentication) {
         try {
+            Message message = new Message();
             User trueSender = userService.getUserById((Long) authentication.getDetails());
             message.setSender(trueSender);
+            message.setReceiver(messageDto.getReceiver());
+            Optional<Chat> chat = chatService.getChat(messageDto.getChatId());
+            if (chat.isEmpty()){
+                throw new ObjectNotFoundException(messageDto.getChatId(), "chat not found");
+            }
+            message.setChat(chat.get());
+            message.setMessage(messageDto.getMessage());
             Message resp = messageService.saveMessage(message);
+
             if (resp != null) {
                 chatMessageProducer.sendMessage(
                         chatMessageProducer.convertToKafkaMessage(resp)
