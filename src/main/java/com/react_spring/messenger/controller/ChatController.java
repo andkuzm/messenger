@@ -116,6 +116,9 @@ class ChatController {
         List<User> users = new ArrayList<>();
         for (String userName : request.getUserNames()) {
             User user = userService.getUserByUsername(userName);
+            if (user == null) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
             users.add(user);
         }
         User user = userService.getUserById(userId);
