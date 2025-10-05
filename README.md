@@ -13,8 +13,8 @@ The project has two branches:  Docker-deployment is the branch which is describe
 
 # running
 ## preconditions
-- **Docker** ≥ 28.3.2  
-- **OpenJDK** 21.0.7
+- **Docker**>=28.3.2  
+- **OpenJDK**>=21.0.7
 
 - ports:
   - 25432
