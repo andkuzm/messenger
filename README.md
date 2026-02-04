@@ -7,7 +7,7 @@ This is a pet project, a backend part of a simple messenger with the most basic 
 - Messenging in said chats
 
 
->The project is currently incomplete.
+>The project is in progress.
 
 The project has two branches:  Docker-deployment is the branch which is described here, kubernetes-deployment branch is currently behind in terms of functionality and should be overlooked.
 
