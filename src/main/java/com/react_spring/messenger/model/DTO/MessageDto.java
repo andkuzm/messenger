@@ -7,7 +7,6 @@ import lombok.Data;
 
 @Data
 public class MessageDto {
-    private User sender;
     private User receiver;
     @NotNull
     private Long chatId;

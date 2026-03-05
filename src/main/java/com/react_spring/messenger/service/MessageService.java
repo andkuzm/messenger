@@ -2,10 +2,10 @@ package com.react_spring.messenger.service;
 
 import com.react_spring.messenger.model.Message;
 import com.react_spring.messenger.repository.MessageRepository;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,8 +27,12 @@ public class MessageService {
         return messageRepository.save(message);
     }
 
-    public Message changeMessageById(Long id, String newText) {
-        Message message = messageRepository.findById(id).orElseThrow();
+    public Message changeMessageById(Long id, String newText, Long senderId) {
+        Message message = messageRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Message not found"));
+        if (!message.getSender().getId().equals(senderId)) {
+            throw new AccessDeniedException("Not authorized to edit this message");
+        }
         message.setMessage(newText);
         return messageRepository.save(message);
     }
