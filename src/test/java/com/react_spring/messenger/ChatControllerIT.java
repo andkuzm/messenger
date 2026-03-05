@@ -2,6 +2,7 @@ package com.react_spring.messenger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.react_spring.messenger.model.Chat;
+import com.react_spring.messenger.model.ChatCreationRequest;
 import com.react_spring.messenger.model.LoginRequest;
 import com.react_spring.messenger.model.Message;
 import com.react_spring.messenger.repository.MessageRepository;
@@ -97,13 +98,15 @@ class ChatControllerIT {
 
     @Test
     void testCreateChat() throws Exception {
-        List<Long> userIds = Arrays.asList(sender.getId(), reader.getId());
-        String json = objectMapper.writeValueAsString(userIds);
+        // bob1 (authenticated) creates a chat with alice1; controller adds bob1 automatically
+        ChatCreationRequest request = new ChatCreationRequest();
+        request.setUserNames(List.of("alice1"));
+        request.setTitle("NewChat");
 
         mockMvc.perform(post("/chat/create")
                         .header("Authorization", "Bearer " + token1)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.users.length()").value(2));
@@ -238,5 +241,43 @@ class ChatControllerIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].message").value("Second"))
                 .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void testJoinChat_ShouldReturnOk_WhenChatExists() throws Exception {
+        User joiner = new User();
+        joiner.setUsername("carol1");
+        joiner.setPassword("carolPass");
+
+        mockMvc.perform(post("/user/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(joiner)))
+                .andExpect(status().isOk());
+
+        User persistedJoiner = userRepository.findUsersByUsername("carol1");
+
+        mockMvc.perform(put("/chat/" + chat.getId() + "/join")
+                        .header("Authorization", "Bearer " + token1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(persistedJoiner.getId())))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testJoinChat_ShouldReturnBadRequest_WhenChatNotFound() throws Exception {
+        mockMvc.perform(put("/chat/999999/join")
+                        .header("Authorization", "Bearer " + token1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(1L)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Transactional
+    void testGetChatById_forbidden_WhenNotMember() throws Exception {
+        // chat has no members — bob1 is not in it → expect 403
+        mockMvc.perform(get("/chat/" + chat.getId())
+                        .header("Authorization", "Bearer " + token1))
+                .andExpect(status().isForbidden());
     }
 }

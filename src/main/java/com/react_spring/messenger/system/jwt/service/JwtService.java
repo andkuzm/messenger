@@ -6,6 +6,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
@@ -14,13 +15,20 @@ import java.util.Date;
 import java.util.List;
 
 @Service
-public class JwtService { //TODO
-    private final String secret = "qwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwerty";
-    protected final Key key = Keys.hmacShaKeyFor(secret.getBytes());
+public class JwtService {
+
+    private final Key key;
+    private final long expirationMs;
+
+    public JwtService(@Value("${jwt.secret}") String secret,
+                      @Value("${jwt.expiration-ms}") long expirationMs) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        this.expirationMs = expirationMs;
+    }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(secret.getBytes()).build().parseClaimsJws(token);
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (JwtException e) {
             return false;
@@ -29,27 +37,26 @@ public class JwtService { //TODO
 
     public UsernamePasswordAuthenticationToken getAuthentication(String token) {
         Claims claims = Jwts.parserBuilder()
-                .setSigningKey(secret.getBytes())
+                .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
 
         String username = claims.getSubject();
-        Long userId = claims.get("userId", Long.class);  // extract userId
+        Long userId = claims.get("userId", Long.class);
 
         UsernamePasswordAuthenticationToken auth =
                 new UsernamePasswordAuthenticationToken(username, null, List.of());
-        auth.setDetails(userId);  // store userId in authentication details
+        auth.setDetails(userId);
         return auth;
     }
 
     public String generateToken(User user) {
-        long expirationMillis = 1000 * 60 * 60 * 2;
         return Jwts.builder()
                 .setSubject(user.getUsername())
                 .claim("userId", user.getId())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationMillis))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }

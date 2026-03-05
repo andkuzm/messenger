@@ -35,6 +35,11 @@ public class ChatService {
     public boolean joinChat(Chat chat, Long userId) {
         return userRepository.findById(userId)
                 .map(user -> {
+                    boolean alreadyMember = chat.getUsers().stream()
+                            .anyMatch(u -> u.getId().equals(userId));
+                    if (alreadyMember) {
+                        return false;
+                    }
                     chat.getUsers().add(user);
                     chatRepository.save(chat);
                     return true;

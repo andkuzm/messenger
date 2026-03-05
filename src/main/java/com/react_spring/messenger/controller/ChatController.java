@@ -3,12 +3,12 @@ package com.react_spring.messenger.controller;
 import com.react_spring.messenger.model.Chat;
 import com.react_spring.messenger.model.ChatCreationRequest;
 import com.react_spring.messenger.model.Message;
-import com.react_spring.messenger.service.MessageService;
-import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.service.ChatService;
+import com.react_spring.messenger.service.MessageService;
+import com.react_spring.messenger.service.UnreadService;
+import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.system.user.service.UserService;
-import jakarta.annotation.Nullable;
-import org.springframework.data.domain.Page;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -23,37 +23,57 @@ class ChatController {
     private final ChatService chatService;
     private final UserService userService;
     private final MessageService messageService;
+    private final UnreadService unreadService;
 
-    public ChatController(ChatService chatService, UserService userService, MessageService messageService) {
+    public ChatController(ChatService chatService, UserService userService,
+                          MessageService messageService, UnreadService unreadService) {
         this.chatService = chatService;
         this.userService = userService;
         this.messageService = messageService;
+        this.unreadService = unreadService;
     }
 
     /**
-     * Get list of all chats where a certain user is present.
+     * Get list of all chats for the authenticated user.
+     * Restricted to the requesting user's own chats.
      *
-     * @param userId id of the user that belongs to the searched chats
-     * @return list of all chats that user is in
+     * @param userId id of the user — must match the authenticated user
+     * @param authentication current authenticated user
+     * @return list of chats, 403 if userId doesn't match requester, or 500 on error
      */
     @GetMapping("/by-user/{userId}")
-    ResponseEntity<Object> findChatsByUserId(@PathVariable Long userId) {
-        List<Chat> chats = chatService.getChatsByUsersId(userId);
-        return new ResponseEntity<>(chats, HttpStatus.OK); //TODO fallback
+    ResponseEntity<Object> findChatsByUserId(@PathVariable Long userId, Authentication authentication) {
+        Long requesterId = (Long) authentication.getDetails();
+        if (!requesterId.equals(userId)) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        try {
+            List<Chat> chats = chatService.getChatsByUsersId(userId);
+            return new ResponseEntity<>(chats, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
-     * Getting a single chat.
+     * Getting a single chat. The authenticated user must be a member of the chat.
      *
      * @param chatId id of the chat to retrieve
-     * @return 200 OK and message if successful
-     *         404 and exception text if unsuccessful
+     * @param authentication current authenticated user
+     * @return 200 OK and chat if successful
+     *         403 FORBIDDEN if the requesting user is not a member
+     *         404 NOT FOUND if chat does not exist
      */
     @GetMapping("/{chatId}")
-    ResponseEntity<Object> getChat(@PathVariable Long chatId) { //TODO validate correct user
+    ResponseEntity<Object> getChat(@PathVariable Long chatId, Authentication authentication) {
+        Long userId = (Long) authentication.getDetails();
         Chat chat = chatService.getChat(chatId).orElse(null);
-        if (chat==null){
+        if (chat == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        boolean isMember = chat.getUsers().stream().anyMatch(u -> u.getId().equals(userId));
+        if (!isMember) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         return new ResponseEntity<>(chat, HttpStatus.OK);
     }
@@ -87,6 +107,19 @@ class ChatController {
     }
 
     /**
+     * Get the unread message count for the authenticated user in a specific chat.
+     *
+     * @param chatId id of the chat
+     * @param authentication current authenticated user
+     * @return 200 OK with the unread count
+     */
+    @GetMapping("/{chatId}/unread")
+    public ResponseEntity<Long> getUnreadCount(@PathVariable Long chatId, Authentication authentication) {
+        Long userId = (Long) authentication.getDetails();
+        return ResponseEntity.ok(unreadService.getUnread(chatId, userId));
+    }
+
+    /**
      * Join a chat by adding a user to it.
      *
      * @param chatId id of the chat to join
@@ -95,23 +128,23 @@ class ChatController {
      *         400 BAD REQUEST if chat not found or join failed
      */
     @PutMapping("/{chatId}/join")
-    public ResponseEntity<Object> joinChat(@PathVariable Long chatId, @RequestBody Long userId) { //TODO tests
-        return chatService.getChat(chatId).map(chat->{
+    public ResponseEntity<Object> joinChat(@PathVariable Long chatId, @RequestBody Long userId) {
+        return chatService.getChat(chatId).map(chat -> {
             chatService.joinChat(chat, userId);
             return new ResponseEntity<>(HttpStatus.OK);
         }).orElse(new ResponseEntity<>(HttpStatus.BAD_REQUEST));
     }
 
     /**
-     * Creation of chat
+     * Creates a new chat and adds the authenticated user as a member.
      *
-     * @param userNames list of usernames all users of the chat at the moment of its creation
-     * @param title title of the chat, can be null
+     * @param request contains the list of other usernames to include in the chat, and an optional title
+     * @param authentication current authenticated user (automatically added as a member)
      * @return 200 OK and chat object if successful
-     *         400 if unsuccessful
+     *         400 BAD REQUEST if any username is not found or chat creation fails
      */
     @PostMapping("/create")
-    ResponseEntity<Object> createChat(@RequestBody ChatCreationRequest request, Authentication authentication) { //TODO correct docs
+    ResponseEntity<Object> createChat(@Valid @RequestBody ChatCreationRequest request, Authentication authentication) {
         Long userId = (Long) authentication.getDetails();
         List<User> users = new ArrayList<>();
         for (String userName : request.getUserNames()) {

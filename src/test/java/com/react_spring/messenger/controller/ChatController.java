@@ -1,6 +1,7 @@
 package com.react_spring.messenger.controller;
 
 import com.react_spring.messenger.model.Chat;
+import com.react_spring.messenger.model.ChatCreationRequest;
 import com.react_spring.messenger.model.Message;
 import com.react_spring.messenger.service.MessageService;
 import com.react_spring.messenger.system.user.model.User;
@@ -10,15 +11,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class ChatControllerTest { //TODO
+class ChatControllerTest {
 
     private ChatService chatService;
     private UserService userService;
@@ -47,12 +51,29 @@ class ChatControllerTest { //TODO
     }
 
     @Test
-    void getChat_ShouldReturnChat_WhenExists() {
+    void findChatsByUserId_ShouldReturnInternalServerError_WhenExceptionThrown() {
+        Long userId = 1L;
+        when(chatService.getChatsByUsersId(userId)).thenThrow(new RuntimeException("DB error"));
+
+        ResponseEntity<Object> response = chatController.findChatsByUserId(userId);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    @Test
+    void getChat_ShouldReturnChat_WhenMemberExists() {
         Long chatId = 1L;
+        Long userId = 42L;
+        User member = new User();
+        member.setId(userId);
         Chat chat = new Chat();
+        chat.setUsers(new ArrayList<>(List.of(member)));
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getDetails()).thenReturn(userId);
         when(chatService.getChat(chatId)).thenReturn(Optional.of(chat));
 
-        ResponseEntity<Object> response = chatController.getChat(chatId);
+        ResponseEntity<Object> response = chatController.getChat(chatId, authentication);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(chat, response.getBody());
@@ -60,49 +81,94 @@ class ChatControllerTest { //TODO
     }
 
     @Test
+    void getChat_ShouldReturnForbidden_WhenNotMember() {
+        Long chatId = 1L;
+        Long userId = 42L;
+        User otherUser = new User();
+        otherUser.setId(99L);
+        Chat chat = new Chat();
+        chat.setUsers(new ArrayList<>(List.of(otherUser)));
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getDetails()).thenReturn(userId);
+        when(chatService.getChat(chatId)).thenReturn(Optional.of(chat));
+
+        ResponseEntity<Object> response = chatController.getChat(chatId, authentication);
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
     void getChat_ShouldReturnNotFound_WhenMissing() {
         Long chatId = 1L;
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getDetails()).thenReturn(42L);
         when(chatService.getChat(chatId)).thenReturn(Optional.empty());
 
-        ResponseEntity<Object> response = chatController.getChat(chatId);
+        ResponseEntity<Object> response = chatController.getChat(chatId, authentication);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNull(response.getBody());
         verify(chatService).getChat(chatId);
     }
 
-//    @Test
-//    void createChat_ShouldReturnChat_WhenCreated() { //TODO fix for usernames
-//        List<Long> userIds = List.of(1L, 2L);
-//        User u1 = new User(); u1.setId(1L);
-//        User u2 = new User(); u2.setId(2L);
-//        Chat chat = new Chat();
-//
-//        when(userService.getUserById(1L)).thenReturn(u1);
-//        when(userService.getUserById(2L)).thenReturn(u2);
-//        when(chatService.createChat(any(Chat.class))).thenReturn(Optional.of(chat));
-//
-//        ResponseEntity<Object> response = chatController.createChat(userIds, "Test");
-//
-//        assertEquals(HttpStatus.OK, response.getStatusCode());
-//        assertEquals(chat, response.getBody());
-//        verify(chatService).createChat(any(Chat.class));
-//    }
-//
-//    @Test
-//    void createChat_ShouldReturnBadRequest_WhenNotCreated() { //TODO fix for usernames
-//        List<Long> userIds = List.of(1L);
-//        User u1 = new User(); u1.setId(1L);
-//
-//        when(userService.getUserById(1L)).thenReturn(u1);
-//        when(chatService.createChat(any(Chat.class))).thenReturn(Optional.empty());
-//
-//        ResponseEntity<Object> response = chatController.createChat(userIds, "Test");
-//
-//        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-//        assertNull(response.getBody());
-//        verify(chatService).createChat(any(Chat.class));
-//    }
+    @Test
+    void createChat_ShouldReturnChat_WhenCreated() {
+        ChatCreationRequest request = new ChatCreationRequest();
+        request.setUserNames(List.of("alice"));
+        request.setTitle("TestChat");
+
+        User alice = new User(); alice.setId(2L); alice.setUsername("alice");
+        User creator = new User(); creator.setId(1L); creator.setUsername("bob");
+        Chat chat = new Chat();
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getDetails()).thenReturn(1L);
+        when(userService.getUserByUsername("alice")).thenReturn(alice);
+        when(userService.getUserById(1L)).thenReturn(creator);
+        when(chatService.createChat(any(Chat.class))).thenReturn(Optional.of(chat));
+
+        ResponseEntity<Object> response = chatController.createChat(request, authentication);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(chat, response.getBody());
+        verify(chatService).createChat(any(Chat.class));
+    }
+
+    @Test
+    void createChat_ShouldReturnBadRequest_WhenUserNotFound() {
+        ChatCreationRequest request = new ChatCreationRequest();
+        request.setUserNames(List.of("nonexistent"));
+        request.setTitle("TestChat");
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getDetails()).thenReturn(1L);
+        when(userService.getUserByUsername("nonexistent")).thenReturn(null);
+
+        ResponseEntity<Object> response = chatController.createChat(request, authentication);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void createChat_ShouldReturnBadRequest_WhenCreationFails() {
+        ChatCreationRequest request = new ChatCreationRequest();
+        request.setUserNames(List.of("alice"));
+        request.setTitle("TestChat");
+
+        User alice = new User(); alice.setId(2L); alice.setUsername("alice");
+        User creator = new User(); creator.setId(1L);
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getDetails()).thenReturn(1L);
+        when(userService.getUserByUsername("alice")).thenReturn(alice);
+        when(userService.getUserById(1L)).thenReturn(creator);
+        when(chatService.createChat(any(Chat.class))).thenReturn(Optional.empty());
+
+        ResponseEntity<Object> response = chatController.createChat(request, authentication);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
 
     @Test
     void testGetLatestMessages() {
@@ -158,7 +224,7 @@ class ChatControllerTest { //TODO
     void testPreferBeforeOverAfter() {
         Long chatId = 1L;
         Long beforeMessageId = 99L;
-        Long afterMessageId = 100L; // should be ignored
+        Long afterMessageId = 100L;
         int size = 10;
         List<Message> expectedMessages = List.of(new Message());
 

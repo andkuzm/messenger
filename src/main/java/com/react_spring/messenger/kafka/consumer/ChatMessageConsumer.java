@@ -1,27 +1,30 @@
 package com.react_spring.messenger.kafka.consumer;
 
 import com.react_spring.messenger.kafka.model.ChatMessage;
-import org.springframework.data.redis.core.RedisTemplate;
+import com.react_spring.messenger.service.UnreadService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class ChatMessageConsumer {
 
-    private final RedisTemplate<String, Integer> redisTemplate;
-
-    public ChatMessageConsumer(RedisTemplate<String, Integer> redisTemplate) {
-        this.redisTemplate = redisTemplate;
-    }
+    private final UnreadService unreadService;
 
     @KafkaListener(
-            topics = "chat-messages",
-            groupId = "chat-group",
+            topics = "${kafka.topic.chat-messages}",
+            groupId = "chat-message-group",
             containerFactory = "chatMessageKafkaListenerFactory"
     )
     public void consume(ChatMessage message) {
-        System.out.println("Received message: " + message);
-        String key = "unread:" + message.getChatId() + ":" + message.getReceiverId(); //key: "unread:{message.getChatId()}:{message.getReaderId()}"
-        redisTemplate.opsForValue().increment(key);
+        try {
+            log.debug("Received message event: {}", message);
+            unreadService.increment(message.getChatId(), message.getReceiverId());
+        } catch (Exception e) {
+            log.error("Error processing chat-messages event: {}", message, e);
+        }
     }
 }

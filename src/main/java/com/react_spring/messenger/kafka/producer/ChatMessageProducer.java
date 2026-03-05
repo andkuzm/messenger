@@ -3,6 +3,7 @@ package com.react_spring.messenger.kafka.producer;
 import com.react_spring.messenger.kafka.model.ChatMessage;
 import com.react_spring.messenger.model.Message;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -12,10 +13,11 @@ public class ChatMessageProducer {
 
     private final KafkaTemplate<String, ChatMessage> kafkaTemplate;
 
-    private static final String TOPIC = "chat-messages";
+    @Value("${kafka.topic.chat-messages}")
+    private String topic;
 
     public void sendMessage(ChatMessage message) {
-        kafkaTemplate.send(TOPIC, message.getChatId().toString(), message);
+        kafkaTemplate.send(topic, message.getChatId().toString(), message);
     }
 
     public ChatMessage convertToKafkaMessage(Message message) {
