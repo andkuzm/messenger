@@ -7,6 +7,7 @@ import com.react_spring.messenger.service.MessageService;
 import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.service.ChatService;
 import com.react_spring.messenger.system.user.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -120,7 +121,7 @@ class ChatController {
      *         400 BAD REQUEST if any username is not found or chat creation fails
      */
     @PostMapping("/create")
-    ResponseEntity<Object> createChat(@RequestBody ChatCreationRequest request, Authentication authentication) {
+    ResponseEntity<Object> createChat(@Valid @RequestBody ChatCreationRequest request, Authentication authentication) {
         Long userId = (Long) authentication.getDetails();
         List<User> users = new ArrayList<>();
         for (String userName : request.getUserNames()) {

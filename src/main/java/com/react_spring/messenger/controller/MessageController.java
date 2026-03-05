@@ -10,6 +10,7 @@ import com.react_spring.messenger.service.ChatService;
 import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.service.MessageService;
 import com.react_spring.messenger.system.user.service.UserService;
+import jakarta.validation.Valid;
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,8 +46,8 @@ class MessageController {
      *         400 if change attempt was unsuccessful
      */
     @PutMapping("/change/{messageId}")
-    ResponseEntity<Object> ChangeMessage(@PathVariable Long messageId, @RequestBody String content) {
-        Message resp = messageService.ChangeMessageById(messageId, content);
+    ResponseEntity<Object> changeMessage(@PathVariable Long messageId, @RequestBody String content) {
+        Message resp = messageService.changeMessageById(messageId, content);
         if (resp != null) {
             return new ResponseEntity<>(HttpStatus.OK);
         }
@@ -61,7 +62,7 @@ class MessageController {
      *         404 and exception text if unsuccessful
      */
     @GetMapping("/{messageId}")
-    ResponseEntity<Object> GetMessage(@PathVariable Long messageId, Authentication authentication) {
+    ResponseEntity<Object> getMessage(@PathVariable Long messageId, Authentication authentication) {
         try {
             Message resp = messageService.getMessageById(messageId);
 
@@ -86,7 +87,7 @@ class MessageController {
      *         404 and exception text if unsuccessful with runtime exception triggered
      */
     @PostMapping("/send")
-    ResponseEntity<Object> sendMessage(@RequestBody MessageDto messageDto, Authentication authentication) {
+    ResponseEntity<Object> sendMessage(@Valid @RequestBody MessageDto messageDto, Authentication authentication) {
         try {
             Message message = new Message();
             User trueSender = userService.getUserById((Long) authentication.getDetails());

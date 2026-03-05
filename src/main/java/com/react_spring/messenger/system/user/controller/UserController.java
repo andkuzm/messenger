@@ -4,6 +4,7 @@ import com.react_spring.messenger.model.LoginRequest;
 import com.react_spring.messenger.model.RegisterRequest;
 import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.system.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +25,7 @@ public class UserController {
      * @return 200 OK if successful
      */
     @PostMapping("/auth/register")
-    public ResponseEntity<String> register(@RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest registerRequest) {
         return ResponseEntity.ok(userService.register(registerRequest));
     }
 
@@ -35,7 +36,7 @@ public class UserController {
      * @return 200 OK and JWT token if successful
      */
     @PostMapping("/auth/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest loginRequest) {
         return new  ResponseEntity<>(userService.login(loginRequest), HttpStatus.OK);
     }
 
@@ -51,13 +52,6 @@ public class UserController {
         User user = userService.getUserById(userId);
         return ResponseEntity.ok(new String[]{user.getId().toString(), user.getUsername()});
     }
-
-//    // Admin-only endpoint
-//    @PreAuthorize("hasRole('ADMIN')")
-//    @GetMapping("/all")
-//    public ResponseEntity<List<User>> getAllUsers() {
-//        return ResponseEntity.ok(userService.getAllUsers());
-//    }
 
     /**
      * update the logged-in user

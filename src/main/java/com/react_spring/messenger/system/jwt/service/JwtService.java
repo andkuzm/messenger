@@ -18,9 +18,12 @@ import java.util.List;
 public class JwtService {
 
     private final Key key;
+    private final long expirationMs;
 
-    public JwtService(@Value("${jwt.secret}") String secret) {
+    public JwtService(@Value("${jwt.secret}") String secret,
+                      @Value("${jwt.expiration-ms}") long expirationMs) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        this.expirationMs = expirationMs;
     }
 
     public boolean validateToken(String token) {
@@ -49,12 +52,11 @@ public class JwtService {
     }
 
     public String generateToken(User user) {
-        long expirationMillis = 1000 * 60 * 60 * 2;
         return Jwts.builder()
                 .setSubject(user.getUsername())
                 .claim("userId", user.getId())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationMillis))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }

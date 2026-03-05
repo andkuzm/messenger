@@ -27,7 +27,7 @@ public class MessageService {
         return messageRepository.save(message);
     }
 
-    public Message ChangeMessageById(Long id, String newText) {
+    public Message changeMessageById(Long id, String newText) {
         Message message = messageRepository.findById(id).orElseThrow();
         message.setMessage(newText);
         return messageRepository.save(message);
