@@ -7,8 +7,6 @@ import com.react_spring.messenger.service.MessageService;
 import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.service.ChatService;
 import com.react_spring.messenger.system.user.service.UserService;
-import jakarta.annotation.Nullable;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -34,26 +32,37 @@ class ChatController {
      * Get list of all chats where a certain user is present.
      *
      * @param userId id of the user that belongs to the searched chats
-     * @return list of all chats that user is in
+     * @return list of all chats that user is in, or 500 on error
      */
     @GetMapping("/by-user/{userId}")
     ResponseEntity<Object> findChatsByUserId(@PathVariable Long userId) {
-        List<Chat> chats = chatService.getChatsByUsersId(userId);
-        return new ResponseEntity<>(chats, HttpStatus.OK); //TODO fallback
+        try {
+            List<Chat> chats = chatService.getChatsByUsersId(userId);
+            return new ResponseEntity<>(chats, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
-     * Getting a single chat.
+     * Getting a single chat. The authenticated user must be a member of the chat.
      *
      * @param chatId id of the chat to retrieve
-     * @return 200 OK and message if successful
-     *         404 and exception text if unsuccessful
+     * @param authentication current authenticated user
+     * @return 200 OK and chat if successful
+     *         403 FORBIDDEN if the requesting user is not a member
+     *         404 NOT FOUND if chat does not exist
      */
     @GetMapping("/{chatId}")
-    ResponseEntity<Object> getChat(@PathVariable Long chatId) { //TODO validate correct user
+    ResponseEntity<Object> getChat(@PathVariable Long chatId, Authentication authentication) {
+        Long userId = (Long) authentication.getDetails();
         Chat chat = chatService.getChat(chatId).orElse(null);
-        if (chat==null){
+        if (chat == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        boolean isMember = chat.getUsers().stream().anyMatch(u -> u.getId().equals(userId));
+        if (!isMember) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         return new ResponseEntity<>(chat, HttpStatus.OK);
     }
@@ -95,7 +104,7 @@ class ChatController {
      *         400 BAD REQUEST if chat not found or join failed
      */
     @PutMapping("/{chatId}/join")
-    public ResponseEntity<Object> joinChat(@PathVariable Long chatId, @RequestBody Long userId) { //TODO tests
+    public ResponseEntity<Object> joinChat(@PathVariable Long chatId, @RequestBody Long userId) {
         return chatService.getChat(chatId).map(chat->{
             chatService.joinChat(chat, userId);
             return new ResponseEntity<>(HttpStatus.OK);
@@ -103,15 +112,15 @@ class ChatController {
     }
 
     /**
-     * Creation of chat
+     * Creates a new chat and adds the authenticated user as a member.
      *
-     * @param userNames list of usernames all users of the chat at the moment of its creation
-     * @param title title of the chat, can be null
+     * @param request contains the list of other usernames to include in the chat, and an optional title
+     * @param authentication current authenticated user (automatically added as a member)
      * @return 200 OK and chat object if successful
-     *         400 if unsuccessful
+     *         400 BAD REQUEST if any username is not found or chat creation fails
      */
     @PostMapping("/create")
-    ResponseEntity<Object> createChat(@RequestBody ChatCreationRequest request, Authentication authentication) { //TODO correct docs
+    ResponseEntity<Object> createChat(@RequestBody ChatCreationRequest request, Authentication authentication) {
         Long userId = (Long) authentication.getDetails();
         List<User> users = new ArrayList<>();
         for (String userName : request.getUserNames()) {

@@ -30,7 +30,23 @@ The project has two branches:  Docker-deployment is the branch which is describe
   - 29096
   
   are expected to be available for all the containers to be mapped properly with default settings, otherwise the ports should be changed in compose.yaml and application.properties
-- port 5173 is expected to be free for the frontend, otherwise `configuration.setAllowedOrigins(List.of("http://localhost:5173")); // frontend` should be changed in the `java/com/react_spring/messenger/system/config/SecurityConfig.java`
+- port 5173 is expected to be free for the frontend, otherwise set the `CORS_ALLOWED_ORIGINS` environment variable (see Configuration below)
 ## building
-After preconditions are met, running `docker compose up -d` should build and run all required containers in Docker.  
+After preconditions are met, running `docker compose up -d` should build and run all required containers in Docker.
 When containers are running, starting MessengerApplication at `java/com/react_spring/messenger/MessengerApplication.java` will launch the spring app, and apply the changelog to the PostgreSQL database, completing the setup of the backend part, which should now be accessible on localhost:8080.
+
+## configuration
+All connection settings and secrets are read from environment variables with sensible local defaults. Override any of these for non-default or production deployments:
+
+| Environment Variable | Default (local dev) | Description |
+|---|---|---|
+| `DB_URL` | `jdbc:postgresql://localhost:25432/mydatabase` | PostgreSQL JDBC URL |
+| `DB_USERNAME` | `myuser` | PostgreSQL username |
+| `DB_PASSWORD` | `secret` | PostgreSQL password |
+| `REDIS_HOST` | `localhost` | Redis host |
+| `REDIS_PORT` | `26379` | Redis port |
+| `KAFKA_BOOTSTRAP_SERVERS` | `localhost:29092,localhost:29094,localhost:29096` | Kafka broker list |
+| `JWT_SECRET` | *(default key — change in production)* | HMAC-SHA256 signing key for JWT tokens (must be ≥ 256 bits) |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Allowed frontend origin for CORS |
+
+**Important:** Always set `JWT_SECRET` to a strong random value in any non-local environment. The default key is insecure.
