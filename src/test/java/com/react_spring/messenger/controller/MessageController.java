@@ -19,17 +19,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class MessageControllerTest { //TODO
+class MessageControllerTest {
 
     private MessageService messageService;
     private ChatMessageProducer chatMessageProducer;
     private ChatReadProducer chatReadProducer;
     private UserService userService;
-    private MessageController messageController;
     private ChatService chatService;
+    private MessageController messageController;
 
     @BeforeEach
     void setUp() {
@@ -37,6 +40,7 @@ class MessageControllerTest { //TODO
         chatMessageProducer = mock(ChatMessageProducer.class);
         chatReadProducer = mock(ChatReadProducer.class);
         userService = mock(UserService.class);
+        chatService = mock(ChatService.class);
 
         messageController = new MessageController(
                 messageService, chatMessageProducer, chatReadProducer, userService, chatService
@@ -83,14 +87,13 @@ class MessageControllerTest { //TODO
 
         UsernamePasswordAuthenticationToken auth =
                 new UsernamePasswordAuthenticationToken("user", null);
-        auth.setDetails(123L); // authenticated user id
+        auth.setDetails(123L);
 
         ResponseEntity<Object> response = messageController.GetMessage(messageId, auth);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(msg, response.getBody());
 
-        // Verify ChatRead was sent
         ArgumentCaptor<ChatRead> captor = ArgumentCaptor.forClass(ChatRead.class);
         verify(chatReadProducer).sendMessage(captor.capture());
         ChatRead cr = captor.getValue();
@@ -115,57 +118,74 @@ class MessageControllerTest { //TODO
         assertEquals("Not found", response.getBody());
     }
 
-//    @Test
-//    void sendMessage_ShouldReturnOk_WhenSaved() { //TODO fix after message controller accepts messageDto
-//        Message msg = new Message();
-//        User sender = new User(); sender.setId(123L);
-//        Message saved = new Message();
-//        ChatMessage  chatMessage = new ChatMessage();
-//        MessageDto msgDto = new MessageDto();
-//
-//        when(userService.getUserById(123L)).thenReturn(sender);
-//        when(messageService.saveMessage(msg)).thenReturn(saved);
-//        when(chatMessageProducer.convertToKafkaMessage(saved)).thenReturn(chatMessage);
-//
-//        UsernamePasswordAuthenticationToken auth =
-//                new UsernamePasswordAuthenticationToken("user", null);
-//        auth.setDetails(123L);
-//
-//        ResponseEntity<Object> response = messageController.sendMessage(msg, auth);
-//
-//        assertEquals(HttpStatus.OK, response.getStatusCode());
-//        verify(chatMessageProducer).sendMessage(chatMessage);
-//    }
-//
-//    @Test
-//    void sendMessage_ShouldReturnNotFound_WhenSaveFails() {
-//        Message msg = new Message();
-//        User sender = new User(); sender.setId(123L);
-//
-//        when(userService.getUserById(123L)).thenReturn(sender);
-//        when(messageService.saveMessage(msg)).thenReturn(null);
-//
-//        UsernamePasswordAuthenticationToken auth =
-//                new UsernamePasswordAuthenticationToken("user", null);
-//        auth.setDetails(123L);
-//
-//        ResponseEntity<Object> response = messageController.sendMessage(msg, auth);
-//
-//        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-//    }
-//
-//    @Test
-//    void sendMessage_ShouldReturnNotFound_WhenExceptionThrown() {
-//        Message msg = new Message();
-//        when(userService.getUserById(anyLong())).thenThrow(new RuntimeException("User missing"));
-//
-//        UsernamePasswordAuthenticationToken auth =
-//                new UsernamePasswordAuthenticationToken("user", null);
-//        auth.setDetails(123L);
-//
-//        ResponseEntity<Object> response = messageController.sendMessage(msg, auth);
-//
-//        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-//        assertEquals("User missing", response.getBody());
-//    }
+    @Test
+    void sendMessage_ShouldReturnOk_WhenSaved() {
+        MessageDto dto = new MessageDto();
+        dto.setChatId(1L);
+        dto.setMessage("hello");
+        User receiver = new User(); receiver.setId(99L);
+        dto.setReceiver(receiver);
+
+        User sender = new User(); sender.setId(123L);
+        Chat chat = new Chat(); chat.setId(1L);
+        Message saved = new Message();
+        ChatMessage chatMessage = new ChatMessage();
+
+        when(userService.getUserById(123L)).thenReturn(sender);
+        when(chatService.getChat(1L)).thenReturn(Optional.of(chat));
+        when(messageService.saveMessage(any(Message.class))).thenReturn(saved);
+        when(chatMessageProducer.convertToKafkaMessage(saved)).thenReturn(chatMessage);
+
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken("user", null);
+        auth.setDetails(123L);
+
+        ResponseEntity<Object> response = messageController.sendMessage(dto, auth);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(chatMessageProducer).sendMessage(chatMessage);
+    }
+
+    @Test
+    void sendMessage_ShouldReturnNotFound_WhenChatMissing() {
+        MessageDto dto = new MessageDto();
+        dto.setChatId(999L);
+        dto.setMessage("hello");
+
+        User sender = new User(); sender.setId(123L);
+        when(userService.getUserById(123L)).thenReturn(sender);
+        when(chatService.getChat(999L)).thenReturn(Optional.empty());
+
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken("user", null);
+        auth.setDetails(123L);
+
+        ResponseEntity<Object> response = messageController.sendMessage(dto, auth);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void sendMessage_ShouldReturnNotFound_WhenSaveFails() {
+        MessageDto dto = new MessageDto();
+        dto.setChatId(1L);
+        dto.setMessage("hello");
+        User receiver = new User(); receiver.setId(99L);
+        dto.setReceiver(receiver);
+
+        User sender = new User(); sender.setId(123L);
+        Chat chat = new Chat(); chat.setId(1L);
+
+        when(userService.getUserById(123L)).thenReturn(sender);
+        when(chatService.getChat(1L)).thenReturn(Optional.of(chat));
+        when(messageService.saveMessage(any(Message.class))).thenReturn(null);
+
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken("user", null);
+        auth.setDetails(123L);
+
+        ResponseEntity<Object> response = messageController.sendMessage(dto, auth);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
 }

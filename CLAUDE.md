@@ -238,21 +238,18 @@ Long userId = (Long) authentication.getDetails();
 
 ### CORS
 
-Frontend origin `http://localhost:5173` is whitelisted. Update `SecurityConfig` when the frontend URL changes.
+The allowed frontend origin is configured via the `CORS_ALLOWED_ORIGINS` environment variable (default: `http://localhost:5173`). Do not hardcode a URL in `SecurityConfig` — update the env var instead.
+
+### Environment Variables
+
+All secrets and connection strings are externalized. See README for the full table. When adding new configurable values, follow the same pattern: `${ENV_VAR:default}` in `application.properties` and read via `@Value` in the relevant class.
 
 ---
 
-## Known TODOs (from source comments)
+## Remaining TODOs
 
-- **`JwtService`**: Secret key is hardcoded — move to environment variable.
-- **`SecurityConfig`**: Review TODO comment in source.
-- **`JwtAuthenticationFilter`**: Review TODO comment in source.
-- **`ChatController`**: Add validation that the requesting user is actually a member of the chat; improve error/fallback handling.
-- **`KafkaConsumerConfig`**: Replace wildcard trusted packages (`"*"`) with specific package list.
-- **Message/Chat services**: Add input validation.
-- **`@PreAuthorize`**: Method-level security annotations are commented out — consider enabling.
-
-When working on these areas, address the TODOs rather than working around them.
+- **Message/Chat services**: Input validation is missing — add `@NotBlank`, `@NotNull` etc. and a global `@ControllerAdvice` for validation errors.
+- **`@PreAuthorize`**: Method-level security annotations are commented out in service/controller layer — consider enabling for finer-grained authorization.
 
 ---
 

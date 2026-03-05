@@ -11,6 +11,7 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 import java.util.HashMap;
@@ -20,10 +21,12 @@ import java.util.Map;
 @Configuration
 public class KafkaConsumerConfig {
 
+    @Value("${spring.kafka.bootstrap-servers}")
+    private String bootstrapServers;
+
     private Map<String, Object> consumerConfigs(String groupId) {
         Map<String, Object> config = new HashMap<>();
-        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:29092,localhost:29094,localhost:29096");
-//        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka1-service:9092,kafka2-service:9094,kafka3-service:9096");
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         return config;
@@ -33,7 +36,7 @@ public class KafkaConsumerConfig {
     public ConsumerFactory<String, ChatMessage> chatMessageConsumerFactory() {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonDeserializer<ChatMessage> deserializer = new JsonDeserializer<>(ChatMessage.class, objectMapper, false);
-        deserializer.addTrustedPackages("*"); //TODO mb more specific
+        deserializer.addTrustedPackages("com.react_spring.messenger.kafka.model");
         return new DefaultKafkaConsumerFactory<>(
                 consumerConfigs("chat-message-group"), new StringDeserializer(), deserializer
         );
@@ -51,7 +54,7 @@ public class KafkaConsumerConfig {
     public ConsumerFactory<String, ChatRead> chatReadConsumerFactory() {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonDeserializer<ChatRead> deserializer = new JsonDeserializer<>(ChatRead.class, objectMapper, false);
-        deserializer.addTrustedPackages("*");
+        deserializer.addTrustedPackages("com.react_spring.messenger.kafka.model");
         return new DefaultKafkaConsumerFactory<>(
                 consumerConfigs("chat-read-group"), new StringDeserializer(), deserializer
         );
