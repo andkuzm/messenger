@@ -36,7 +36,7 @@ After preconditions are met, running `docker compose up -d` should build and run
 When containers are running, starting MessengerApplication at `java/com/react_spring/messenger/MessengerApplication.java` will launch the spring app, and apply the changelog to the PostgreSQL database, completing the setup of the backend part, which should now be accessible on localhost:8080.
 
 ## configuration
-All connection settings and secrets are read from environment variables with sensible local defaults. Override any of these for non-default or production deployments:
+All connection settings and secrets are read from environment variables with local defaults built in. Set any of these when the defaults don't match your environment:
 
 | Environment Variable | Default (local dev) | Description |
 |---|---|---|
@@ -50,3 +50,46 @@ All connection settings and secrets are read from environment variables with sen
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Allowed frontend origin for CORS |
 
 **Important:** Always set `JWT_SECRET` to a strong random value in any non-local environment. The default key is insecure.
+
+### Setting environment variables
+
+**Linux / macOS (shell export):**
+```bash
+export JWT_SECRET=your-very-long-random-secret-here
+export CORS_ALLOWED_ORIGINS=https://yourfrontend.example.com
+./gradlew bootRun
+```
+
+**Inline for a single run:**
+```bash
+JWT_SECRET=your-secret CORS_ALLOWED_ORIGINS=https://yourfrontend.example.com ./gradlew bootRun
+```
+
+**Docker (`-e` flags):**
+```bash
+docker run -e JWT_SECRET=your-secret \
+           -e DB_URL=jdbc:postgresql://db-host:5432/messenger \
+           -e DB_USERNAME=prod_user \
+           -e DB_PASSWORD=prod_password \
+           -e REDIS_HOST=redis-host \
+           -e KAFKA_BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9092 \
+           -e CORS_ALLOWED_ORIGINS=https://yourfrontend.example.com \
+           -p 8080:8080 messenger:latest
+```
+
+**Kubernetes (env in deployment manifest):**
+```yaml
+env:
+  - name: JWT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: messenger-secrets
+        key: jwt-secret
+  - name: DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: messenger-secrets
+        key: db-password
+  - name: CORS_ALLOWED_ORIGINS
+    value: "https://yourfrontend.example.com"
+```
