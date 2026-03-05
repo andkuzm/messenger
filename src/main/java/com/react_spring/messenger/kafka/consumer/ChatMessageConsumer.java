@@ -15,7 +15,7 @@ public class ChatMessageConsumer {
     private final UnreadService unreadService;
 
     @KafkaListener(
-            topics = "chat-messages",
+            topics = "${kafka.topic.chat-messages}",
             groupId = "chat-message-group",
             containerFactory = "chatMessageKafkaListenerFactory"
     )
