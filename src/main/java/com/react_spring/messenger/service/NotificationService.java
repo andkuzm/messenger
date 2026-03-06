@@ -4,13 +4,13 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UnreadService {
+public class NotificationService {
 
     private static final String KEY_PREFIX = "unread:";
 
     private final RedisTemplate<String, Integer> redisTemplate;
 
-    public UnreadService(RedisTemplate<String, Integer> redisTemplate) {
+    public NotificationService(RedisTemplate<String, Integer> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
