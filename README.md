@@ -17,6 +17,7 @@ The project has two branches:  Docker-deployment is the branch which is describe
 - **OpenJDK**>=21.0.7
 
 - ports:
+  - 8080
   - 25432
   - 26379
   - 9092
@@ -28,12 +29,18 @@ The project has two branches:  Docker-deployment is the branch which is describe
   - 9096
   - 9097
   - 29096
-  
+
   are expected to be available for all the containers to be mapped properly with default settings, otherwise the ports should be changed in compose.yaml and application.properties
 - port 5173 is expected to be free for the frontend, otherwise set the `CORS_ALLOWED_ORIGINS` environment variable (see Configuration below)
 ## building
-After preconditions are met, running `docker compose up -d` should build and run all required containers in Docker.
-When containers are running, starting MessengerApplication at `java/com/react_spring/messenger/MessengerApplication.java` will launch the spring app, and apply the changelog to the PostgreSQL database, completing the setup of the backend part, which should now be accessible on localhost:8080.
+After preconditions are met:
+1. Build the application jar: `./gradlew build -x test`
+2. Build the Docker image: `docker build -t messenger:latest .`
+3. Run `docker compose up -d` to start all containers including the messenger app.
+
+The Spring app will apply the Liquibase changelog to PostgreSQL on startup. The backend will be accessible on `localhost:8080`.
+
+Alternatively, if you prefer to run the Spring app locally outside Docker (e.g. for development), skip steps 1–2, run `docker compose up -d` to start only the infrastructure (comment out the `messenger` service in `compose.yaml`), then start the app with `./gradlew bootRun`.
 
 ## configuration
 All connection settings and secrets are read from environment variables with local defaults built in. Set any of these when the defaults don't match your environment:
