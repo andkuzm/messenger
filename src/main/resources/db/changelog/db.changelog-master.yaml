@@ -243,8 +243,8 @@ databaseChangeLog:
       author: messenger
       changes:
         - sql:
-            sql: "SELECT setval(‘users_id_seq’, (SELECT MAX(id) FROM users));"
+            sql: "SELECT setval(pg_get_serial_sequence(‘users’, ‘id’), (SELECT MAX(id) FROM users));"
         - sql:
-            sql: "SELECT setval(‘chats_id_seq’, (SELECT MAX(id) FROM chats));"
+            sql: "SELECT setval(pg_get_serial_sequence(‘chats’, ‘id’), (SELECT MAX(id) FROM chats));"
         - sql:
-            sql: "SELECT setval(‘messages_id_seq’, (SELECT MAX(id) FROM messages));"
+            sql: "SELECT setval(pg_get_serial_sequence(‘messages’, ‘id’), (SELECT MAX(id) FROM messages));"
