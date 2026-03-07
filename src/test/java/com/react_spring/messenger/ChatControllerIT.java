@@ -5,6 +5,7 @@ import com.react_spring.messenger.model.Chat;
 import com.react_spring.messenger.model.ChatCreationRequest;
 import com.react_spring.messenger.model.LoginRequest;
 import com.react_spring.messenger.model.Message;
+import com.react_spring.messenger.model.RegisterRequest;
 import com.react_spring.messenger.repository.MessageRepository;
 import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.repository.ChatRepository;
@@ -56,27 +57,30 @@ class ChatControllerIT {
         chatRepository.deleteAll();
         userRepository.deleteAll();
 
-        sender = new User();
-        sender.setUsername("bob1");
-        sender.setPassword("bobPass");
-
-        reader = new User();
-        reader.setUsername("alice1");
-        reader.setPassword("alicePass");
-
         chat = new Chat();
         chat.setTitle("TestChat");
         chat = chatRepository.save(chat);
 
+        RegisterRequest senderRegister = new RegisterRequest();
+        senderRegister.setUsername("bob1");
+        senderRegister.setPassword("bobPass");
+
+        RegisterRequest readerRegister = new RegisterRequest();
+        readerRegister.setUsername("alice1");
+        readerRegister.setPassword("alicePass");
+
         mockMvc.perform(post("/user/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(sender)))
+                        .content(objectMapper.writeValueAsString(senderRegister)))
                 .andExpect(status().isOk());
 
         mockMvc.perform(post("/user/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(reader)))
+                        .content(objectMapper.writeValueAsString(readerRegister)))
                 .andExpect(status().isOk());
+
+        sender = userRepository.findUsersByUsername("bob1");
+        reader = userRepository.findUsersByUsername("alice1");
 
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername("bob1");
@@ -245,13 +249,13 @@ class ChatControllerIT {
 
     @Test
     void testJoinChat_ShouldReturnOk_WhenChatExists() throws Exception {
-        User joiner = new User();
-        joiner.setUsername("carol1");
-        joiner.setPassword("carolPass");
+        RegisterRequest joinerRegister = new RegisterRequest();
+        joinerRegister.setUsername("carol1");
+        joinerRegister.setPassword("carolPass");
 
         mockMvc.perform(post("/user/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(joiner)))
+                        .content(objectMapper.writeValueAsString(joinerRegister)))
                 .andExpect(status().isOk());
 
         User persistedJoiner = userRepository.findUsersByUsername("carol1");
