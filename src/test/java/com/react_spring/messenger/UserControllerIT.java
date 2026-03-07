@@ -29,7 +29,7 @@ class UserControllerIT {
     void testRegisterAndLoginAndMeFlow() throws Exception {
 
         RegisterRequest registerRequest = new RegisterRequest();
-        registerRequest.setUsername("alice");
+        registerRequest.setUsername("dave");
         registerRequest.setPassword("secret");
 
         mockMvc.perform(post("/user/auth/register")
@@ -39,7 +39,7 @@ class UserControllerIT {
 
 
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setUsername("alice");
+        loginRequest.setUsername("dave");
         loginRequest.setPassword("secret");
 
         String token = mockMvc.perform(post("/user/auth/login")
@@ -54,14 +54,14 @@ class UserControllerIT {
         mockMvc.perform(get("/user/me")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[1]").value("alice"));
+                .andExpect(jsonPath("$[1]").value("dave"));
     }
 
     @Test
     void testUpdateMe() throws Exception {
 
         RegisterRequest registerRequest = new RegisterRequest();
-        registerRequest.setUsername("bob");
+        registerRequest.setUsername("eve");
         registerRequest.setPassword("mypassword");
 
         mockMvc.perform(post("/user/auth/register")
@@ -71,7 +71,7 @@ class UserControllerIT {
 
 
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setUsername("bob");
+        loginRequest.setUsername("eve");
         loginRequest.setPassword("mypassword");
 
         String token = mockMvc.perform(post("/user/auth/login")
@@ -82,13 +82,13 @@ class UserControllerIT {
 
 
         User updated = new User();
-        updated.setUsername("bobUpdated");
+        updated.setUsername("eveUpdated");
 
         mockMvc.perform(put("/user/me")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updated)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("bobUpdated"));
+                .andExpect(jsonPath("$.username").value("eveUpdated"));
     }
 }
