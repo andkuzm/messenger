@@ -2,6 +2,7 @@ package com.react_spring.messenger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.react_spring.messenger.model.LoginRequest;
+import com.react_spring.messenger.model.RegisterRequest;
 import com.react_spring.messenger.system.user.model.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,8 +10,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.RequestBuilder;
-import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -29,13 +28,13 @@ class UserControllerIT {
     @Test
     void testRegisterAndLoginAndMeFlow() throws Exception {
 
-        User user = new User();
-        user.setUsername("alice");
-        user.setPassword("secret");
+        RegisterRequest registerRequest = new RegisterRequest();
+        registerRequest.setUsername("alice");
+        registerRequest.setPassword("secret");
 
         mockMvc.perform(post("/user/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(user)))
+                        .content(objectMapper.writeValueAsString(registerRequest)))
                 .andExpect(status().isOk());
 
 
@@ -52,22 +51,22 @@ class UserControllerIT {
                 .getContentAsString();
 
 
-        mockMvc.perform((RequestBuilder) get("/user/me")
+        mockMvc.perform(get("/user/me")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect((ResultMatcher) jsonPath("$[1]").value("alice"));
+                .andExpect(jsonPath("$[1]").value("alice"));
     }
 
     @Test
     void testUpdateMe() throws Exception {
 
-        User user = new User();
-        user.setUsername("bob");
-        user.setPassword("mypassword");
+        RegisterRequest registerRequest = new RegisterRequest();
+        registerRequest.setUsername("bob");
+        registerRequest.setPassword("mypassword");
 
         mockMvc.perform(post("/user/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(user)))
+                        .content(objectMapper.writeValueAsString(registerRequest)))
                 .andExpect(status().isOk());
 
 
@@ -84,7 +83,6 @@ class UserControllerIT {
 
         User updated = new User();
         updated.setUsername("bobUpdated");
-        updated.setPassword("newpass");
 
         mockMvc.perform(put("/user/me")
                         .header("Authorization", "Bearer " + token)
