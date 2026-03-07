@@ -1,4 +1,24 @@
 services:
+  messenger:
+    image: 'messenger:latest'
+    ports:
+      - '8080:8080'
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/mydatabase
+      DB_USERNAME: myuser
+      DB_PASSWORD: secret
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9094,kafka3:9096
+      JWT_SECRET: qwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwertyqwerty
+      CORS_ALLOWED_ORIGINS: http://localhost:5173
+    depends_on:
+      - postgres
+      - redis
+      - kafka1
+      - kafka2
+      - kafka3
+
   postgres:
     image: 'postgres:latest'
     environment:
