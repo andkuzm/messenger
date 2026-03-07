@@ -143,7 +143,7 @@ class MessageControllerIT {
         mockMvc.perform(put("/message/change/{id}", messageId)
                         .header("Authorization", "Bearer " + token1)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("\"pong\""))
+                        .content("pong"))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/message/{id}", messageId)
