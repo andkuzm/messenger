@@ -5,7 +5,8 @@ import com.react_spring.messenger.kafka.producer.ChatMessageProducer;
 import com.react_spring.messenger.kafka.producer.ChatReadProducer;
 import com.react_spring.messenger.model.Chat;
 import com.react_spring.messenger.model.LoginRequest;
-import com.react_spring.messenger.model.Message;
+import com.react_spring.messenger.model.RegisterRequest;
+import com.react_spring.messenger.model.DTO.MessageDto;
 import com.react_spring.messenger.system.user.model.User;
 import com.react_spring.messenger.repository.ChatRepository;
 import com.react_spring.messenger.repository.MessageRepository;
@@ -57,17 +58,13 @@ class MessageControllerIT {
 
     @BeforeEach
     void setUp() throws Exception {
-        sender = new User();
-        sender.setUsername("bob1");
-        sender.setPassword("bobPass");
+        RegisterRequest senderRegister = new RegisterRequest();
+        senderRegister.setUsername("bob1");
+        senderRegister.setPassword("bobPass");
 
-        reader = new User();
-        reader.setUsername("alice1");
-        reader.setPassword("alicePass");
-        sender.setId(-1L);
-        reader.setId(-2L);
-//        userRepository.save(sender);
-//        userRepository.save(reader);
+        RegisterRequest readerRegister = new RegisterRequest();
+        readerRegister.setUsername("alice1");
+        readerRegister.setPassword("alicePass");
 
         chat = new Chat();
         chat.setTitle("TestChat");
@@ -75,13 +72,16 @@ class MessageControllerIT {
 
         mockMvc.perform(post("/user/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(sender)))
+                        .content(objectMapper.writeValueAsString(senderRegister)))
                 .andExpect(status().isOk());
 
         mockMvc.perform(post("/user/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(reader)))
+                        .content(objectMapper.writeValueAsString(readerRegister)))
                 .andExpect(status().isOk());
+
+        sender = userRepository.findUsersByUsername("bob1");
+        reader = userRepository.findUsersByUsername("alice1");
 
         LoginRequest loginRequest = new LoginRequest();
 
@@ -108,61 +108,47 @@ class MessageControllerIT {
 
     @Test
     void testSendMessage() throws Exception {
-        User persistentSender = userRepository.findUsersByUsername(sender.getUsername());
-        User persistentReader = userRepository.findUsersByUsername(reader.getUsername());
-        var message = new Message();
-        message.setMessage("hello world");
-        message.setChat(chat);
-        message.setSender(persistentSender);
-        message.setReceiver(persistentReader);
+        var messageDto = new MessageDto();
+        messageDto.setMessage("hello world");
+        messageDto.setChatId(chat.getId());
+        messageDto.setReceiver(reader);
 
         mockMvc.perform(post("/message/send")
                         .header("Authorization", "Bearer " + token1)
-                        .principal(() -> String.valueOf(persistentSender.getId()))
-                        .requestAttr("authenticationDetails", persistentSender.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(message)))
+                        .content(objectMapper.writeValueAsString(messageDto)))
                 .andExpect(status().isOk());
     }
 
     @Test
     void testGetMessageAndChange() throws Exception {
-        User persistentSender = userRepository.findUsersByUsername(sender.getUsername());
-        User persistentReader = userRepository.findUsersByUsername(reader.getUsername());
-        var message = new Message();
-        message.setMessage("ping");
-        message.setChat(chat);
-        message.setReceiver(persistentReader);
-        message.setSender(persistentSender);
+        var messageDto = new MessageDto();
+        messageDto.setMessage("ping");
+        messageDto.setChatId(chat.getId());
+        messageDto.setReceiver(reader);
 
         mockMvc.perform(post("/message/send")
                         .header("Authorization", "Bearer " + token1)
-                        .principal(() -> String.valueOf(persistentSender.getId()))
-                        .requestAttr("authenticationDetails", persistentSender.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(message)))
+                        .content(objectMapper.writeValueAsString(messageDto)))
                 .andExpect(status().isOk());
 
         Long messageId = messageRepository.getFirstByMessage("ping").getId();
 
         mockMvc.perform(get("/message/{id}", messageId)
-                        .header("Authorization", "Bearer " + token2)
-                        .principal(() -> String.valueOf(persistentReader.getId()))
-                        .requestAttr("authenticationDetails", persistentReader.getId()))
+                        .header("Authorization", "Bearer " + token2))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("ping"));
 
         mockMvc.perform(put("/message/change/{id}", messageId)
                         .header("Authorization", "Bearer " + token1)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("\"pong\""))
+                        .content("pong"))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/message/{id}", messageId)
-                        .header("Authorization", "Bearer " + token2)
-                        .principal(() -> String.valueOf(persistentReader.getId()))
-                        .requestAttr("authenticationDetails", persistentReader.getId()))
+                        .header("Authorization", "Bearer " + token2))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("\"pong\""));
+                .andExpect(jsonPath("$.message").value("pong"));
     }
 }

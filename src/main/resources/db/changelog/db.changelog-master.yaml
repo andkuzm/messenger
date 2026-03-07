@@ -237,3 +237,14 @@ databaseChangeLog:
               - column: { name: chat_id, valueNumeric: 2 }
               - column: { name: timestamp, valueDate: "2025-01-11T09:05:00" }
               - column: { name: message, value: "Yes, I’ll share the report." }
+
+  - changeSet:
+      id: 5-fix-sequences
+      author: messenger
+      changes:
+        - sql:
+            sql: "ALTER SEQUENCE users_id_seq RESTART WITH 4;"
+        - sql:
+            sql: "ALTER SEQUENCE chats_id_seq RESTART WITH 3;"
+        - sql:
+            sql: "ALTER SEQUENCE messages_id_seq RESTART WITH 5;"
