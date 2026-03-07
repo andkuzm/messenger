@@ -1,17 +1,17 @@
 package com.react_spring.messenger.kafka.consumer;
 
 import com.react_spring.messenger.kafka.model.ChatRead;
-import org.springframework.data.redis.core.RedisTemplate;
+import com.react_spring.messenger.service.NotificationService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ChatReadConsumer {
 
-    private final RedisTemplate<String, Integer> redisTemplate;
+    private final NotificationService notificationService;
 
-    public ChatReadConsumer(RedisTemplate<String, Integer> redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    public ChatReadConsumer(NotificationService notificationService) {
+        this.notificationService = notificationService;
     }
 
     @KafkaListener(
@@ -21,8 +21,6 @@ public class ChatReadConsumer {
     )
     public void consume(ChatRead message) {
         System.out.println("read message: " + message);
-
-        String key = "unread:" + message.getChatId() + ":" + message.getReaderId(); //key: "unread:{message.getChatId()}:{message.getReaderId()}"
-        redisTemplate.opsForValue().decrement(key);
+        notificationService.decrement(message.getChatId(), message.getReaderId());
     }
 }
