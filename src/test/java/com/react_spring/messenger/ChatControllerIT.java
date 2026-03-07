@@ -279,6 +279,22 @@ class ChatControllerIT {
     @Test
     @Transactional
     void testGetChatById_forbidden_WhenNotMember() throws Exception {
+        RegisterRequest joinerRegister = new RegisterRequest();
+        joinerRegister.setUsername("carol1");
+        joinerRegister.setPassword("carolPass");
+
+        mockMvc.perform(post("/user/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(joinerRegister)))
+                .andExpect(status().isOk());
+
+        User persistedJoiner = userRepository.findUsersByUsername("carol1");
+
+        mockMvc.perform(put("/chat/" + chat.getId() + "/join")
+                        .header("Authorization", "Bearer " + token1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(persistedJoiner.getId())))
+                .andExpect(status().isOk());
         // chat has no members — bob1 is not in it → expect 403
         mockMvc.perform(get("/chat/" + chat.getId())
                         .header("Authorization", "Bearer " + token1))

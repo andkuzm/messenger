@@ -60,7 +60,11 @@ class ChatController {
         if (chat == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        boolean isMember = chat.getUsers().stream().anyMatch(u -> u.getId().equals(userId));
+        List<User> chatUsers = chat.getUsers();
+        if (chatUsers == null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        boolean isMember = chatUsers.stream().anyMatch(u -> u.getId().equals(userId));
         if (!isMember) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
