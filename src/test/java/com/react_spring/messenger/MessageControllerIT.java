@@ -21,16 +21,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.springframework.kafka.test.context.EmbeddedKafka;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-@EmbeddedKafka(partitions = 1, topics = {"chat-messages", "chat-read"})
-class MessageControllerIT extends AbstractIntegrationTest {
+class MessageControllerIT {
 
     @Autowired
     private MockMvc mockMvc;
